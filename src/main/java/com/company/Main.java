@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class Main {
 
-    public static final int CLASSIFICATION_LIMIT = 5; // fixed! do not change!
+    public static final int CLASSIFICATION_LIMIT = 5; // fixed! do not change!  Refer to 'xtabSafe' as to why.
     public static final int MIN_CLASSIFICATION_SIZE = 2;
     public static final int ROW_COUNT = 1000 * 1000 * 1000; // 1e^9
     public static final int LONG_SIZE = 64;
