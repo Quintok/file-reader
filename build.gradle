@@ -1,0 +1,19 @@
+apply plugin: 'java'
+apply plugin: 'application'
+mainClassName = "com.company.Main"
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.10'
+}
+
+repositories {
+    mavenCentral()
+    maven {
+      url "https://oss.sonatype.org/content/groups/public"
+    }
+}
+
+dependencies {
+  testCompile 'com.carrotsearch:junit-benchmarks:0.7.2'
+  testCompile 'junit:junit:4.11'
+}
