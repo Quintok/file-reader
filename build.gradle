@@ -1,6 +1,8 @@
 apply plugin: 'java'
 apply plugin: 'application'
+
 mainClassName = "com.company.Main"
+applicationDefaultJvmArgs = ["-Xmx2G"]
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.10'
@@ -16,4 +18,8 @@ repositories {
 dependencies {
   testCompile 'com.carrotsearch:junit-benchmarks:0.7.2'
   testCompile 'junit:junit:4.11'
+}
+
+run {
+    args "a"
 }

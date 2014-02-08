@@ -65,4 +65,8 @@ public class UnsafeByteSet {
         }
         return result;
     }
+
+    public void destroy() {
+        UNSAFE.freeMemory(address);
+    }
 }
