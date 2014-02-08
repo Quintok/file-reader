@@ -1,145 +1,82 @@
 package com.company;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Main {
 
-    public static final int CLASSIFICATION_LIMIT = 5;
+    public static final int CLASSIFICATION_LIMIT = 5; // fixed! do not change!
     public static final int MIN_CLASSIFICATION_SIZE = 2;
     public static final int ROW_COUNT = 1000 * 1000 * 1000; // 1e^9
     public static final int LONG_SIZE = 64;
+    public static final int CLASSIFICATION_BYTE_LENGTH_AS_LONG = ROW_COUNT / LONG_SIZE;
+
+    public static final int CUBE_SIZE = 100;
+
+    public static final int NUM_TRIES = 3;
 
     public static void main(String[] args) {
 
-        if(args.length == 1)
-            unsafeByteSetXTab();
-        else
-            safeByteSetXTab();
+        safeByteSetXTab();
 
     }
 
     private static void safeByteSetXTab() {
-        List<BitSet[]> classifications = new ArrayList<BitSet[]>();
+        long[][][] classifications = new long[CLASSIFICATION_LIMIT][MIN_CLASSIFICATION_SIZE][CLASSIFICATION_BYTE_LENGTH_AS_LONG];
+
+        Random random = new Random();
 
         // Generate classifications
         for(int i = 0; i < CLASSIFICATION_LIMIT; i++) {
-            BitSet[] classificationValues = new BitSet[MIN_CLASSIFICATION_SIZE];
             for(int j = 0; j < MIN_CLASSIFICATION_SIZE; j++) {
-                long[] value = createValue();
-                classificationValues[j] = BitSet.valueOf(value);
-
+                for(int k = 0; k < CLASSIFICATION_BYTE_LENGTH_AS_LONG; k++)
+                classifications[i][j][k] = random.nextLong();
             }
-            classifications.add(classificationValues);
         }
 
-        Random random = new Random();
-        List<List<BitSet>> allSelectedValues = new ArrayList<List<BitSet>>();
-        for(int i = 0; i < 100; i++) {
-            List<BitSet> selectedValues = new ArrayList<BitSet>();
+        int[][][] allSelectedValues = new int[CUBE_SIZE][CLASSIFICATION_LIMIT][1];
+        for(int i = 0; i < CUBE_SIZE; i++) {
             for(int j = 0; j < CLASSIFICATION_LIMIT; j++) {
-                int value = random.nextInt(classifications.get(j).length);
-                BitSet selectedValue = classifications.get(j)[value];
-                selectedValues.add(selectedValue);
+                int value = random.nextInt(classifications[j].length);
+                allSelectedValues[i][j][0] = value;
             }
-            allSelectedValues.add(selectedValues);
         }
 
-        System.out.println("Warmup Safe");
-        for(int i = 0; i < 100; i++) {
-            if(i % 10 == 0) {
-                System.out.println("So far: " + i);
-            }
-            xtabSafe(allSelectedValues.get(i));
+        for(int i = 0; i < CUBE_SIZE; i++) {
+            xtabSafe(classifications, allSelectedValues[i]);
         }
 
-        System.out.println("XTab Safe");
-        long currTime = System.currentTimeMillis();
-        for(int i = 0; i < 100; i++) {
-            if(i % 10 == 0) {
-                System.out.println("So far: " + i);
-                continue;
+        long[] cube = new long[CUBE_SIZE];
+        long time = 0L;
+        for(int times = 0; times < NUM_TRIES; times++) {
+            long currTime = System.currentTimeMillis();
+            for(int i = 0; i < CUBE_SIZE; i++) {
+                cube[i] = xtabSafe(classifications, allSelectedValues[i]);
             }
-            xtabSafe(allSelectedValues.get(i));
+            time += System.currentTimeMillis() - currTime;
         }
-        long time = System.currentTimeMillis() - currTime;
-        System.out.println("Time in ms: " + time);
+
+        System.out.println(Arrays.toString(cube));
+
+        System.out.println("Average time: " + time / NUM_TRIES + " Number of tries: " + NUM_TRIES);
+        
     }
 
-    private static void unsafeByteSetXTab() {
-        List<UnsafeByteSet[]> classifications = new ArrayList<UnsafeByteSet[]>();
+    private static long xtabSafe(long[][][] field, int[][] values) {
+        int sum = 0;
 
-        // Generate classifications
-        for(int i = 0; i < CLASSIFICATION_LIMIT; i++) {
-            UnsafeByteSet[] classificationValues = new UnsafeByteSet[MIN_CLASSIFICATION_SIZE];
-            for(int j = 0; j < MIN_CLASSIFICATION_SIZE; j++) {
-                long[] value = createValue();
-                classificationValues[j] = new UnsafeByteSet(value);
-
-            }
-            classifications.add(classificationValues);
+        // loop through each long in that array.
+        for(int j = 0; j < CLASSIFICATION_BYTE_LENGTH_AS_LONG; j++) {
+            // well, this is faster than a loop... :(
+            sum += Long.bitCount(
+                        field[0][values[0][0]][j] &
+                        field[1][values[1][0]][j] &
+                        field[2][values[2][0]][j] &
+                        field[3][values[3][0]][j] &
+                        field[4][values[4][0]][j]
+            );
         }
 
-        Random random = new Random();
-        List<List<UnsafeByteSet>> allSelectedValues = new ArrayList<List<UnsafeByteSet>>();
-        for(int i = 0; i < 100; i++) {
-            List<UnsafeByteSet> selectedValues = new ArrayList<UnsafeByteSet>();
-            for(int j = 0; j < CLASSIFICATION_LIMIT; j++) {
-                int value = random.nextInt(classifications.get(j).length);
-                UnsafeByteSet selectedValue = classifications.get(j)[value];
-                selectedValues.add(selectedValue);
-            }
-            allSelectedValues.add(selectedValues);
-        }
-
-        System.out.println("warmup");
-        for(int i = 0; i < 100; i++) {
-            if(i % 10 == 0) {
-                System.out.println("So far: " + i);
-            }
-            xtab(allSelectedValues.get(i));
-        }
-
-        System.out.println("XTab Unsafe");
-        long currTime = System.currentTimeMillis();
-        for(int i = 0; i < 100; i++) {
-            if(i % 10 == 0) {
-                System.out.println("So far: " + i);
-                continue;
-            }
-            xtab(allSelectedValues.get(i));
-        }
-        long time = System.currentTimeMillis() - currTime;
-        System.out.println("Time in ms: " + time);
-    }
-
-    private static long xtab(List<UnsafeByteSet> selectedValues) {
-
-        UnsafeByteSet result = selectedValues.get(0);
-        for(int i = 1; i < selectedValues.size(); i++) {
-            result.and(selectedValues.get(i));
-        }
-
-        return result.cardinality();
-    }
-
-    private static long xtabSafe(List<BitSet> selectedValues) {
-        BitSet result = selectedValues.get(0);
-        for(int i = 1; i < selectedValues.size(); i++) {
-            result.and(selectedValues.get(i));
-        }
-
-        return result.cardinality();
-    }
-
-    // Make a random long[] full of noise
-    private static long[] createValue() {
-        long[] result = new long[ROW_COUNT / LONG_SIZE];
-        Random random = new Random();
-        for(int i = 0; i < ROW_COUNT / LONG_SIZE; i++)
-            result[i] = random.nextLong();
-        return result;
+        return sum;
     }
 }
