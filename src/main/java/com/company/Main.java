@@ -34,11 +34,11 @@ public class Main {
             }
         }
 
-        int[][][] allSelectedValues = new int[CUBE_SIZE][CLASSIFICATION_LIMIT][1];
+        int[][] allSelectedValues = new int[CUBE_SIZE][CLASSIFICATION_LIMIT];
         for(int i = 0; i < CUBE_SIZE; i++) {
             for(int j = 0; j < CLASSIFICATION_LIMIT; j++) {
                 int value = random.nextInt(classifications[j].length);
-                allSelectedValues[i][j][0] = value;
+                allSelectedValues[i][j] = value;
             }
         }
 
@@ -62,18 +62,18 @@ public class Main {
         
     }
 
-    private static long xtabSafe(long[][][] field, int[][] values) {
+    private static long xtabSafe(long[][][] field, int[] values) {
         int sum = 0;
 
         // loop through each long in that array.
         for(int j = 0; j < CLASSIFICATION_BYTE_LENGTH_AS_LONG; j++) {
             // well, this is faster than a loop... :(
             sum += Long.bitCount(
-                        field[0][values[0][0]][j] &
-                        field[1][values[1][0]][j] &
-                        field[2][values[2][0]][j] &
-                        field[3][values[3][0]][j] &
-                        field[4][values[4][0]][j]
+                        field[0][values[0]][j] &
+                        field[1][values[1]][j] &
+                        field[2][values[2]][j] &
+                        field[3][values[3]][j] &
+                        field[4][values[4]][j]
             );
         }
 
