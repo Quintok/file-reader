@@ -16,9 +16,7 @@ public class Main {
     public static final int NUM_TRIES = 3;
 
     public static void main(String[] args) {
-
         safeByteSetXTab();
-
     }
 
     private static void safeByteSetXTab() {
@@ -66,14 +64,39 @@ public class Main {
         int sum = 0;
 
         // loop through each long in that array.
-        for(int j = 0; j < CLASSIFICATION_BYTE_LENGTH_AS_LONG; j++) {
+        for(int j = 0; j < CLASSIFICATION_BYTE_LENGTH_AS_LONG / 4; j++) {
+            int index = j;
             // well, this is faster than a loop... :(
             sum += Long.bitCount(
-                        field[0][values[0]][j] &
-                        field[1][values[1]][j] &
-                        field[2][values[2]][j] &
-                        field[3][values[3]][j] &
-                        field[4][values[4]][j]
+                        field[0][values[0]][index] &
+                        field[1][values[1]][index] &
+                        field[2][values[2]][index] &
+                        field[3][values[3]][index] &
+                        field[4][values[4]][index]
+            );
+            index++;
+            sum += Long.bitCount(
+                    field[0][values[0]][j] &
+                            field[1][values[1]][index] &
+                            field[2][values[2]][index] &
+                            field[3][values[3]][index] &
+                            field[4][values[4]][index]
+            );
+            index++;
+            sum += Long.bitCount(
+                    field[0][values[0]][j] &
+                            field[1][values[1]][index] &
+                            field[2][values[2]][index] &
+                            field[3][values[3]][index] &
+                            field[4][values[4]][index]
+            );
+            index++;
+            sum += Long.bitCount(
+                    field[0][values[0]][j] &
+                            field[1][values[1]][index] &
+                            field[2][values[2]][index] &
+                            field[3][values[3]][index] &
+                            field[4][values[4]][index]
             );
         }
 
