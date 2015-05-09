@@ -3,56 +3,33 @@ package com.company;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
-import static com.google.common.base.Preconditions.checkState;
+import java.nio.charset.StandardCharsets;
 
 public class DataConverterByteStream {
     static final Logger logger = LoggerFactory.getLogger(DataConverterByteStream.class);
 
-    public static int getInt(InputStream file) {
-        try {
-            final StreamDataTypeAndLength type = getTypeAndLength(file);
-            ByteBuffer buffer;
-            switch (type.type) {
-                case StreamInt8Type:
-                    return file.read();
-                case StreamInt16Type:
-                    buffer = fetchBuffer(file, Short.BYTES);
-                    return buffer.getShort();
-                case StreamInt32Type:
-                    buffer = fetchBuffer(file, Integer.BYTES);
-                    return buffer.getInt();
-                default:
-                    logger.error("Unable to match type {} to a type of integral", type);
-                    throw new RuntimeException("Unmatched type: " + type);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public static int getInt(ByteBuffer buffer) {
+        final StreamDataTypeAndLength type = getTypeAndLength(buffer);
+        switch (type.type) {
+            case StreamInt8Type:
+                return buffer.get();
+            case StreamInt16Type:
+                return buffer.getShort();
+            case StreamInt32Type:
+                return buffer.getInt();
+            default:
+                logger.error("Unable to match type {} to a type of integral", type);
+                throw new RuntimeException("Unmatched type: " + type);
         }
     }
 
-    public static ByteBuffer fetchBuffer(InputStream file, int bytes) {
-        try {
-            byte[] shortBytes = new byte[bytes];
-            logger.info("Creating byte buffer to walk over {} bits", bytes * Byte.SIZE);
-            final int readBytes = file.read(shortBytes);
-            checkState(readBytes == shortBytes.length);
-            return ByteBuffer.wrap(shortBytes).order(ByteOrder.LITTLE_ENDIAN);
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static int getClassType(final InputStream file) {
-        final StreamDataTypeAndLength type = getTypeAndLength(file);
+    private static int getClassType(final ByteBuffer buffer) {
+        final StreamDataTypeAndLength type = getTypeAndLength(buffer);
         switch (type.type) {
             case StreamClassIDType:
-                return readCompressedInteger(file, type.length);
+                return readCompressedInteger(buffer, type.length);
             default:
                 logger.error("Unable to match type {} to a type of ClassIDType", type.type);
                 throw new RuntimeException("Unmatched type: " + type.type);
@@ -60,22 +37,22 @@ public class DataConverterByteStream {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends ClassType> T get(InputStream file) {
+    public static <T extends ClassType> T get(ByteBuffer file) {
         final int classId = getClassType(file);
         logger.debug("Searching for classid: {}", classId);
         for (ClassType.Type type1 : ClassType.Type.values()) {
             if (type1.getClassId() == classId) {
                 logger.info("Found classid {} matches \"{}\"", classId, type1);
                 try {
-                    T result = (T) type1.getType().getConstructor(InputStream.class).newInstance(file);
+                    T result = (T) type1.getType().getConstructor(ByteBuffer.class).newInstance(file);
                     // each class ends in an "StreamClassEndType" to know the literal end of the class object.
-                    byte endClassId = (byte) file.read();
+                    byte endClassId = file.get();
                     if (StreamDataType.StreamClassEndType.getKey() != endClassId) {
                         logger.error("Unable to find end of class for {}.  Chances are the spec changed for this class.", type1);
                         throw new RuntimeException("Unable to find end of class.");
                     }
                     return result;
-                } catch (IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -83,42 +60,49 @@ public class DataConverterByteStream {
         throw new RuntimeException("Unable to find class type: " + classId);
     }
 
-    public static StreamDataTypeAndLength getTypeAndLength(InputStream file) {
-        try {
-            final byte typeIndex = (byte) file.read();
-            final int length = typeIndex >> 4;
-            StreamDataType type = StreamDataType.values()[typeIndex & 0x0F];
-            logger.info("Fetching type {}", type);
-            return new StreamDataTypeAndLength(type, length);
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+    public static StreamDataTypeAndLength getTypeAndLength(ByteBuffer buffer) {
+        final byte typeIndex = buffer.get();
+        final int length = typeIndex >> 4;
+        StreamDataType type = StreamDataType.values()[typeIndex & 0x0F];
+        logger.info("Fetching type {}", type);
+        return new StreamDataTypeAndLength(type, length);
     }
 
-    public static int readCompressedInteger(InputStream file, final int length) {
+    public static int readCompressedInteger(ByteBuffer buffer, final int length) {
         int result = 0;
         for (int i = 0; i < length; i++) {
-            try {
-                result += (file.read() & 0xff) << (8 * i);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            result += (buffer.get() & 0xff) << (8 * i);
         }
         logger.info("Length: {}, result: {}", length, result);
         return result;
     }
 
-    public static long readCompressedLong(InputStream file, final int length) {
-        try {
-            long value = 0;
-            for (int i = 0; i < length; i++) {
-                value += ((long) file.read() & 0xffL) << (8 * i);
-            }
-            logger.info("Length: {}, result: {}", length, value);
-            return value;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+    public static long readCompressedLong(ByteBuffer buffer, final int length) {
+        long value = 0;
+        for (int i = 0; i < length; i++) {
+            value += ((long) buffer.get() & 0xffL) << (8 * i);
         }
+        logger.info("Length: {}, result: {}", length, value);
+        return value;
+    }
+
+    /**
+     * Reads ascii string from current bytebuffer position.
+     * Will execute a rewind on the buffer.
+     *
+     * @return ASCII string from position.
+     */
+    public static String readString(ByteBuffer bytes) {
+        int size = 0;
+        while (bytes.getChar() != '\0') {
+            size++;
+        }
+        bytes.rewind();
+
+        byte[] string = new byte[size];
+        bytes.get(string);
+
+        return new String(string, StandardCharsets.US_ASCII);
     }
 
     enum StreamDataType {

@@ -1,9 +1,9 @@
 package com.company;
 
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 public class DataBlock extends ClassType {
-    public DataBlock(InputStream input) {
-        super(input);
+    public DataBlock(ByteBuffer buffer) {
+        super(buffer);
     }
 }

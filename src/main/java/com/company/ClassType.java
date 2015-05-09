@@ -1,12 +1,12 @@
 package com.company;
 
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 public abstract class ClassType {
-    protected final InputStream input;
+    protected final ByteBuffer buffer;
 
-    public ClassType(InputStream input) {
-        this.input = input;
+    public ClassType(ByteBuffer input) {
+        this.buffer = input;
     }
 
     enum Type {

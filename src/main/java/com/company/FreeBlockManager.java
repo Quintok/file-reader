@@ -1,9 +1,9 @@
 package com.company;
 
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 public class FreeBlockManager extends ClassType {
-    public FreeBlockManager(InputStream input) {
-        super(input);
+    public FreeBlockManager(ByteBuffer buffer) {
+        super(buffer);
     }
 }

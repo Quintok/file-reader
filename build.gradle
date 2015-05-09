@@ -4,7 +4,7 @@ apply plugin: 'application'
 mainClassName = "com.company.Main"
 
 run {
-    args '-help'
+    args '-file', 'file.dat'
 }
 
 compileJava.options.encoding = 'UTF-8'
