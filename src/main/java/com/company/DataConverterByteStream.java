@@ -14,11 +14,9 @@ public class DataConverterByteStream {
         final StreamDataTypeAndLength type = getTypeAndLength(buffer);
         switch (type.type) {
             case StreamInt8Type:
-                return buffer.get();
             case StreamInt16Type:
-                return buffer.getShort();
             case StreamInt32Type:
-                return buffer.getInt();
+                return readCompressedInteger(buffer, type.length);
             default:
                 logger.error("Unable to match type {} to a type of integral", type);
                 throw new RuntimeException("Unmatched type: " + type);
@@ -37,18 +35,19 @@ public class DataConverterByteStream {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends ClassType> T get(ByteBuffer file) {
+    public static <T extends ClassInfo> T get(ByteBuffer file) {
         final int classId = getClassType(file);
         logger.debug("Searching for classid: {}", classId);
-        for (ClassType.Type type1 : ClassType.Type.values()) {
+        for (ClassInfo.Type type1 : ClassInfo.Type.values()) {
             if (type1.getClassId() == classId) {
-                logger.info("Found classid {} matches \"{}\"", classId, type1);
+                logger.debug("Found classid {} matches \"{}\"", classId, type1);
                 try {
                     T result = (T) type1.getType().getConstructor(ByteBuffer.class).newInstance(file);
+
                     // each class ends in an "StreamClassEndType" to know the literal end of the class object.
                     byte endClassId = file.get();
                     if (StreamDataType.StreamClassEndType.getKey() != endClassId) {
-                        logger.error("Unable to find end of class for {}.  Chances are the spec changed for this class.", type1);
+                        logger.error("Unable to find end of class for {} at position {}.  Chances are the spec changed for this class.", type1, file.position());
                         throw new RuntimeException("Unable to find end of class.");
                     }
                     return result;
@@ -61,10 +60,10 @@ public class DataConverterByteStream {
     }
 
     public static StreamDataTypeAndLength getTypeAndLength(ByteBuffer buffer) {
-        final byte typeIndex = buffer.get();
+        final int typeIndex = buffer.get() & 0xFF;
         final int length = typeIndex >> 4;
         StreamDataType type = StreamDataType.values()[typeIndex & 0x0F];
-        logger.info("Fetching type {}", type);
+        logger.debug("Fetching type {}", type);
         return new StreamDataTypeAndLength(type, length);
     }
 
@@ -73,7 +72,7 @@ public class DataConverterByteStream {
         for (int i = 0; i < length; i++) {
             result += (buffer.get() & 0xff) << (8 * i);
         }
-        logger.info("Length: {}, result: {}", length, result);
+        logger.debug("Reading compressed integer of length: {}, result: {}", length, result);
         return result;
     }
 
@@ -82,7 +81,7 @@ public class DataConverterByteStream {
         for (int i = 0; i < length; i++) {
             value += ((long) buffer.get() & 0xffL) << (8 * i);
         }
-        logger.info("Length: {}, result: {}", length, value);
+        logger.debug("Reading compressed long of length: {}, result: {}", length, value);
         return value;
     }
 
