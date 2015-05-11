@@ -1,0 +1,9 @@
+<cache name="objectreference">
+    <key-type class-name="java.lang.Integer" />
+    <value-type class-name="com.company.ClassInfo" />
+    <statistics-enabled>false</statistics-enabled>
+    <management-enabled>false</management-enabled>
+
+    <read-through>true</read-through>
+    <write-through>true</write-through>
+</cache>
