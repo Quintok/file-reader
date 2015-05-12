@@ -7,4 +7,9 @@ public class NullDataType implements DataType<NullDataType> {
     public NullDataType read(ByteBuffer buffer) {
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "NullDataType{}";
+    }
 }

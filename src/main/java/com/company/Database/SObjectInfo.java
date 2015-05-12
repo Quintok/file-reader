@@ -23,4 +23,15 @@ public class SObjectInfo extends ClassInfo {
         subObjectNames = DataConverterByteStream.getStringList(input);
         children = DataConverterByteStream.getStringPointerMap(SObjectInfo.class, input);
     }
+
+    @Override
+    public String toString() {
+        return "SObjectInfo{" +
+                "objectType='" + objectType + '\'' +
+                ", blockNumber=" + blockNumber +
+                ", propertySet=" + propertySet +
+                ", subObjectNames=" + subObjectNames +
+                ", children=" + children +
+                '}';
+    }
 }

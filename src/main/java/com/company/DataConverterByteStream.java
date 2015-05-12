@@ -176,6 +176,11 @@ public class DataConverterByteStream {
         return result;
     }
 
+    public static double getDouble(final ByteBuffer buffer) {
+        final StreamDataTypeAndLength typeAndLength = getTypeAndLength(buffer);
+        return Double.longBitsToDouble(readCompressedLong(buffer, typeAndLength.length));
+    }
+
     enum StreamDataType {
         INT_8(0x00),
         INT_16(0x01),

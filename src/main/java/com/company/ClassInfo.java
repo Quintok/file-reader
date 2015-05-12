@@ -9,10 +9,9 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 public abstract class ClassInfo implements Serializable {
-    protected final ByteBuffer buffer;
 
     public ClassInfo(ByteBuffer input) {
-        this.buffer = input;
+
     }
 
     public enum Type {

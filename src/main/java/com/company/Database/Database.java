@@ -14,11 +14,19 @@ public class Database extends ClassInfo {
     private final Map<String, SObjectInfo> subObjects;
     public Database(ByteBuffer input) {
         super(input);
-        version = DataConverterByteStream.getInt(buffer);
+        version = DataConverterByteStream.getInt(input);
         if(version < 1 || version > 1) {
             throw new UnsupportedOperationException("Database is not supported.");
         }
-        subObjects = DataConverterByteStream.getStringPointerMap(SObjectInfo.class, buffer);
+        subObjects = DataConverterByteStream.getStringPointerMap(SObjectInfo.class, input);
         logger.error("Wohoo!! {}", version);
+    }
+
+    @Override
+    public String toString() {
+        return "Database{" +
+                "version=" + version +
+                ", subObjects=" + subObjects +
+                '}';
     }
 }

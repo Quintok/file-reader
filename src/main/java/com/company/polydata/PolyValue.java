@@ -14,6 +14,13 @@ public class PolyValue extends ClassInfo {
         super(input);
         type = Type.values()[DataConverterByteStream.getInt(input)];
         switch(type) {
+            case NULL:
+                result = new NullDataType();
+                break;
+            case BOOL:
+                BoolDataType dataType = new BoolDataType();
+                result = dataType.read(input);
+                break;
             case BINARY:
                 BinaryDataType binaryDataType = new BinaryDataType(input);
                 result = binaryDataType.read(input);
@@ -22,9 +29,25 @@ public class PolyValue extends ClassInfo {
                 IntegerDataType integerDataType = new IntegerDataType();
                 result = integerDataType.read(input);
                 break;
+            case FLOAT_64:
+                DoubleDataType doubleDataType = new DoubleDataType();
+                result = doubleDataType.read(input);
+                break;
+            case STRING:
+                StringDataType stringDataType = new StringDataType();
+                result = stringDataType.read(input);
+                break;
             default:
                 throw new UnsupportedOperationException("unsupported polyvalue type." + type);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "PolyValue{" +
+                "type=" + type +
+                ", result=" + result +
+                '}';
     }
 
     enum Type {

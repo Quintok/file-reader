@@ -4,20 +4,18 @@ import com.company.DataConverterByteStream;
 
 import java.nio.ByteBuffer;
 
-
-public class IntegerDataType implements DataType<IntegerDataType> {
-
-    private int value;
+public class DoubleDataType implements DataType<DoubleDataType>{
+    private double value;
 
     @Override
-    public IntegerDataType read(ByteBuffer buffer) {
-        this.value = DataConverterByteStream.getInt(buffer);
+    public DoubleDataType read(ByteBuffer buffer) {
+        value = DataConverterByteStream.getDouble(buffer);
         return this;
     }
 
     @Override
     public String toString() {
-        return "IntegerDataType{" +
+        return "DoubleDataType{" +
                 "value=" + value +
                 '}';
     }

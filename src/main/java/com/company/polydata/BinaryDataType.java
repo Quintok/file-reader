@@ -23,4 +23,11 @@ public class BinaryDataType extends ClassInfo implements DataType<BinaryDataType
 
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "BinaryDataType{" +
+                "bytes=" + bytes +
+                '}';
+    }
 }

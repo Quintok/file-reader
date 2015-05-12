@@ -6,7 +6,7 @@ import com.company.Database.Database;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -37,6 +37,15 @@ public class FileLoader {
             final BlockInfo block = blockedFileManager.getBlock(0);
             buffer.position((int) block.getDataBlock().getOffset());
             Database d = DataConverterByteStream.get(buffer);
+
+
+            PrintWriter out
+                    = new PrintWriter(new BufferedWriter(new FileWriter("foo.out", false)));
+
+            out.write(d.toString());
+            out.flush();
+            out.close();
+            System.out.println("Complete.");
         }
     }
 }
