@@ -10,6 +10,7 @@ public class Main {
         FileLoader fileLoader = new FileLoader();
         JCommander jCommander = new JCommander(fileLoader, args);
         fileLoader.loadFile(jCommander);
+        System.exit(0);
     }
 
 }

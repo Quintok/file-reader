@@ -9,17 +9,21 @@ import java.util.List;
 
 public class FreeBlockManager extends ClassInfo {
     static final Logger logger = LoggerFactory.getLogger(FreeBlockManager.class);
-    private final List<DataBlock> blockList;
+    private final List<DataBlock> blocks;
 
     public FreeBlockManager(ByteBuffer buffer) {
         super(buffer);
         final int size = DataConverterByteStream.getInt(buffer);
         logger.info("Free block manager of size {} bits, size of free blocks is {}", buffer.limit(), size);
-        blockList = new ArrayList<>(size);
+        blocks = new ArrayList<>(size);
         for(int i = 0; i < size; i++) {
             DataBlock db = DataConverterByteStream.get(buffer);
-            blockList.add(db);
+            blocks.add(db);
             logger.debug("Adding block to list in position {} is {}", i, db);
         }
+    }
+
+    public List<DataBlock> getBlocks() {
+        return blocks;
     }
 }

@@ -17,7 +17,15 @@ public class BlockInfo extends ClassInfo {
         return dataBlock;
     }
 
-    enum AllocateFlag {
+    public AllocateFlag getFlag() {
+        return flag;
+    }
+
+    public long getSize() {
+        return dataBlock.getSize();
+    }
+
+    public enum AllocateFlag {
         ALLOCATED,
         UNUSED
     }

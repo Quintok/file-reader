@@ -7,12 +7,11 @@ import java.nio.ByteBuffer;
 
 public class PolyValue extends ClassInfo {
 
-    final Type type;
     final DataType result;
 
     public PolyValue(ByteBuffer input) {
         super(input);
-        type = Type.values()[DataConverterByteStream.getInt(input)];
+        Type type = Type.values()[DataConverterByteStream.getInt(input)];
         switch(type) {
             case NULL:
                 result = new NullDataType();

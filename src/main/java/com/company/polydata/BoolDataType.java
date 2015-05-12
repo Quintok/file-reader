@@ -11,16 +11,13 @@ public class BoolDataType implements DataType<BoolDataType> {
     @Override
     public BoolDataType read(ByteBuffer buffer) {
         byte b = buffer.get();
-        byte oldB = b;
-        boolean reRead = false;
 
         // TODO: Work out what the hell is going on here.
-        if(b > 1 && b == 22) {
-            reRead = true;
+        if(b == 22) {
+            byte oldB = b;
             b = buffer.get();
-        }
-        if(reRead)
             logger.error("Re reading boolean polyVal for no obvious reason.  b={}, oldB={}, position={}", b, oldB, buffer.position());
+        }
         this.value = b > 0;
         return this;
     }

@@ -1,10 +1,11 @@
 package com.company;
 
-import com.company.caching.ObjectReferenceCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 public class BlockedFileManager {
@@ -19,32 +20,37 @@ public class BlockedFileManager {
     private DataBlock secondaryDataBlock;
     private DataBlock secondaryFreeDataBlock;
     private BlockData blockData;
-    private FreeBlockManager freeBlockData;
+    private FreeBlockManager freeBlockManager;
 
-    public BlockedFileManager(ByteBuffer buffer, int version, WorkingMode workingMode, DataBlock dataBlock, DataBlock freeDataBlock) {
+    public BlockedFileManager(ByteBuffer buffer,
+                              int version,
+                              WorkingMode workingMode,
+                              DataBlock primaryDataBlock,
+                              DataBlock primaryFreeDataBlock,
+                              DataBlock secondaryDataBlock,
+                              DataBlock secondaryFreeDataBlock) {
         this.buffer = buffer;
         this.version = version;
         this.workingMode = workingMode;
-        switch (workingMode) {
+        this.primaryDataBlock = primaryDataBlock;
+        this.primaryFreeDataBlock = primaryFreeDataBlock;
+        this.secondaryDataBlock = primaryDataBlock;
+        this.secondaryFreeDataBlock = primaryFreeDataBlock;
+        switch(workingMode) {
             case PRIMARY:
-                primaryDataBlock = dataBlock;
-                primaryFreeDataBlock = freeDataBlock;
+                loadAllocatedBlock(primaryDataBlock);
+                loadFreeBlockManager(primaryFreeDataBlock);
                 break;
             case SECONDARY:
-                secondaryDataBlock = dataBlock;
-                secondaryFreeDataBlock = freeDataBlock;
-                break;
-            default:
-                throw new RuntimeException("Unsupported working mode");
+                loadAllocatedBlock(secondaryDataBlock);
+                loadFreeBlockManager(secondaryFreeDataBlock);
         }
-        loadAllocatedBlock(dataBlock);
-        loadFreeBlockManager(freeDataBlock);
     }
 
     static Optional<BlockedFileManager> fromMappedFile(final ByteBuffer buffer) {
         buffer.position(0);
         logger.info("Seeking to {} for opening string", 0);
-        final String s = DataConverterByteStream.readString(buffer);
+        final String s = readString(buffer);
         logger.info("Found opening string \"{}\"", s);
         if (!ID_STRING.equals(s))
             return Optional.empty();
@@ -70,38 +76,56 @@ public class BlockedFileManager {
         logger.info("Found workingmode {}", workingMode);
 
 
-        DataBlock dataBlock;
-        DataBlock freeDataBlock;
+        DataBlock primaryDataBlock;
+        DataBlock primaryFreeDataBlock;
+        DataBlock secondaryDataBlock;
+        DataBlock secondFreeDataBlock;
 
-        switch (workingMode) {
-            case PRIMARY:
-                buffer.position(27);
-                logger.info("Seeking to {} for primary workmode blocks", 27);
-                dataBlock = DataConverterByteStream.get(buffer);
-                logger.info("Primary block {}", dataBlock);
-                freeDataBlock = DataConverterByteStream.get(buffer);
-                logger.info("Primary free block {}", freeDataBlock);
-                break;
-            case SECONDARY:
-                buffer.position(75);
-                logger.info("Seeking to {} for secondary workmode blocks", 75);
-                dataBlock = DataConverterByteStream.get(buffer);
-                logger.info("Secondary block {}", dataBlock);
-                freeDataBlock = DataConverterByteStream.get(buffer);
-                logger.info("Secondary free block {}", freeDataBlock);
-                break;
-            default:
-                throw new UnsupportedOperationException("");
-        }
-
-        BlockedFileManager blockedFileManager = new BlockedFileManager(buffer, version, workingMode, dataBlock, freeDataBlock);
-
+        buffer.position(27);
+        logger.info("Seeking to {} for primary workmode blocks", 27);
+        primaryDataBlock = DataConverterByteStream.get(buffer);
+        logger.info("Primary block {}", primaryDataBlock);
+        primaryFreeDataBlock = DataConverterByteStream.get(buffer);
+        logger.info("Primary free block {}", primaryFreeDataBlock);
+        buffer.position(75);
+        logger.info("Seeking to {} for secondary workmode blocks", 75);
+        secondaryDataBlock = DataConverterByteStream.get(buffer);
+        logger.info("Secondary block {}", secondaryDataBlock);
+        secondFreeDataBlock = DataConverterByteStream.get(buffer);
+        logger.info("Secondary free block {}", secondFreeDataBlock);
+        BlockedFileManager blockedFileManager = new BlockedFileManager(buffer,
+                version,
+                workingMode,
+                primaryDataBlock,
+                primaryFreeDataBlock,
+                secondaryDataBlock,
+                secondFreeDataBlock);
         return Optional.of(blockedFileManager);
+    }
+
+    /**
+     * Reads ascii string from current bytebuffer position.
+     * Will execute a rewind on the buffer.
+     *
+     * @return ASCII string from position.
+     */
+    private static String readString(ByteBuffer bytes) {
+        int size = 0;
+        bytes.mark();
+        while (bytes.getChar() != '\0') {
+            size++;
+        }
+        bytes.reset();
+
+        byte[] string = new byte[size];
+        bytes.get(string);
+
+        return new String(string, StandardCharsets.US_ASCII);
     }
 
     private void loadFreeBlockManager(DataBlock freeDataBlock) {
         buffer.position((int) freeDataBlock.getOffset());
-        this.freeBlockData = DataConverterByteStream.get(buffer);
+        this.freeBlockManager = DataConverterByteStream.get(buffer);
     }
 
     private void loadAllocatedBlock(DataBlock dataBlock) {
@@ -121,5 +145,41 @@ public class BlockedFileManager {
         BlockInfo dataBlock = blockData.getDataBlocks().get(i);
         logger.info("Getting data block {} which is {}", i, dataBlock);
         return dataBlock;
+    }
+
+    public long getSize() {
+        return buffer.limit();
+    }
+
+    public String getIdString() {
+        return ID_STRING;
+    }
+
+    public DataBlock getPrimaryDataBlock() {
+        return primaryDataBlock;
+    }
+
+    public DataBlock getPrimaryFreeDataBlock() {
+        return primaryFreeDataBlock;
+    }
+
+    public DataBlock getSecondaryDataBlock() {
+        return secondaryDataBlock;
+    }
+
+    public DataBlock getSecondaryFreeDataBlock() {
+        return secondaryFreeDataBlock;
+    }
+
+    public int getNumBlocks() {
+        return this.blockData.getDataBlocks().size();
+    }
+
+    public List<BlockInfo> getBlocks() {
+        return blockData.getDataBlocks();
+    }
+
+    public FreeBlockManager getFreeBlockManager() {
+        return freeBlockManager;
     }
 }

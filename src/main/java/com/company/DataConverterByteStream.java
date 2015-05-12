@@ -147,26 +147,6 @@ public class DataConverterByteStream {
         return value;
     }
 
-    /**
-     * Reads ascii string from current bytebuffer position.
-     * Will execute a rewind on the buffer.
-     *
-     * @return ASCII string from position.
-     */
-    public static String readString(ByteBuffer bytes) {
-        int size = 0;
-        bytes.mark();
-        while (bytes.getChar() != '\0') {
-            size++;
-        }
-        bytes.reset();
-
-        byte[] string = new byte[size];
-        bytes.get(string);
-
-        return new String(string, StandardCharsets.US_ASCII);
-    }
-
     public static List<String> getStringList(ByteBuffer buffer) {
         final int size = getInt(buffer);
         List<String> result = new ArrayList<>(size);
