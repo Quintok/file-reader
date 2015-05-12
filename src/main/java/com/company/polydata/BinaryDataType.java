@@ -4,9 +4,10 @@ import com.company.ClassInfo;
 import com.company.DataConverterByteStream;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class BinaryDataType extends ClassInfo implements DataType<BinaryDataType> {
-    private ByteBuffer bytes;
+    private byte[] value;
 
     public BinaryDataType(ByteBuffer input) {
         super(input);
@@ -17,9 +18,8 @@ public class BinaryDataType extends ClassInfo implements DataType<BinaryDataType
         // Integer is mis-serialized as a bytestream.
         final DataConverterByteStream.StreamDataTypeAndLength length = DataConverterByteStream.getTypeAndLength(buffer);
         final int i = DataConverterByteStream.readCompressedInteger(buffer, length.length);
-        bytes = buffer.slice();
-        bytes.limit(i);
-        buffer.position(buffer.position() + i);
+        value = new byte[i];
+        buffer.get(value);
 
         return this;
     }
@@ -27,7 +27,7 @@ public class BinaryDataType extends ClassInfo implements DataType<BinaryDataType
     @Override
     public String toString() {
         return "BinaryDataType{" +
-                "bytes=" + bytes +
+                "value=" + Arrays.toString(value) +
                 '}';
     }
 }
