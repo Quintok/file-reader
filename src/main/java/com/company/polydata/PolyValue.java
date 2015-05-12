@@ -15,15 +15,15 @@ public class PolyValue extends ClassInfo {
         type = Type.values()[DataConverterByteStream.getInt(input)];
         switch(type) {
             case BINARY:
-                final DataConverterByteStream.StreamDataTypeAndLength typeAndLength = DataConverterByteStream.getTypeAndLength(input);
-                DataConverterByteStream.readPointer(PolyValue.class, input);
-                input.position(input.position() + typeAndLength.length);
-                int size = DataConverterByteStream.getInt(input);
-                BinaryDataType object = DataConverterByteStream.get(input);
-                result = DataConverterByteStream.get(input);
+                BinaryDataType binaryDataType = new BinaryDataType(input);
+                result = binaryDataType.read(input);
+                break;
+            case INT_32:
+                IntegerDataType integerDataType = new IntegerDataType();
+                result = integerDataType.read(input);
                 break;
             default:
-                result = null;
+                throw new UnsupportedOperationException("unsupported polyvalue type." + type);
         }
     }
 

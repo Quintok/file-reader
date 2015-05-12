@@ -10,6 +10,6 @@ public class PropertySet extends ClassInfo {
     private Map<String, PolyValue> properties;
     public PropertySet(ByteBuffer input) {
         super(input);
-        properties = DataConverterByteStream.getStringPointerMap(PolyValue.class, buffer);
+        properties = DataConverterByteStream.getStringMap(buffer);
     }
 }
