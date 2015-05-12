@@ -44,10 +44,7 @@ public class PolyValue extends ClassInfo {
 
     @Override
     public String toString() {
-        return "PolyValue{" +
-                "type=" + type +
-                ", result=" + result +
-                '}';
+        return result.toString();
     }
 
     enum Type {
