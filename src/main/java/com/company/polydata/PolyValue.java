@@ -15,6 +15,10 @@ public class PolyValue extends ClassInfo {
         type = Type.values()[DataConverterByteStream.getInt(input)];
         switch(type) {
             case BINARY:
+                final DataConverterByteStream.StreamDataTypeAndLength typeAndLength = DataConverterByteStream.getTypeAndLength(input);
+                DataConverterByteStream.readPointer(PolyValue.class, input);
+                input.position(input.position() + typeAndLength.length);
+                int size = DataConverterByteStream.getInt(input);
                 BinaryDataType object = DataConverterByteStream.get(input);
                 result = DataConverterByteStream.get(input);
                 break;

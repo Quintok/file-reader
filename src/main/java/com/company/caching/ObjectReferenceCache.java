@@ -7,6 +7,8 @@ import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
 
+import static com.google.common.base.Preconditions.checkState;
+
 public class ObjectReferenceCache {
 
     private static ObjectReferenceCache instance;
@@ -27,6 +29,7 @@ public class ObjectReferenceCache {
     }
 
     public <T extends ClassInfo> T get(int objectId) {
+        checkState(cache.containsKey(objectId), "Registered item is not reigstered.  Logic error in parsing dataset for objectId %s.", objectId);
         return (T) cache.get(objectId);
     }
 

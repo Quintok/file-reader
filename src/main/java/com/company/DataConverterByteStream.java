@@ -93,11 +93,12 @@ public class DataConverterByteStream {
         checkState(typeForId.get().getType().equals(clazz));
         StreamDataTypeAndLength registeredFlag = getTypeAndLength(buffer);
         boolean registered = registeredFlag.length != 0;
-        checkState(registeredFlag.type.equals(StreamDataType.OBJECT_ID));
-        final int objectId = buffer.getInt(); // this is just raw, not sure why.
         if (registered) {
+            int objectId = readCompressedInteger(buffer, registeredFlag.length);
             return ObjectReferenceCache.get().get(objectId);
         }
+        checkState(registeredFlag.type.equals(StreamDataType.OBJECT_ID));
+        final int objectId = buffer.getInt(); // this is just raw, not sure why.
         final T result = get(buffer);
         ObjectReferenceCache.get().put(objectId, result);
         return result;
@@ -112,6 +113,7 @@ public class DataConverterByteStream {
         if (length == 0) {
             return new String("");
         }
+        checkState(typeAndLength.type.equals(StreamDataType.BYTE_STREAM));
         buffer.position(buffer.position() + typeAndLength.length); // length is written again as a byte.
         byte[] cString = new byte[length];
         buffer.get(cString, 0, length);

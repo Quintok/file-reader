@@ -18,7 +18,7 @@ public class BinaryDataType extends ClassInfo implements DataType<BinaryDataType
 
     @Override
     public BinaryDataType read(ByteBuffer buffer) {
-        // binary data type is unique in that it is the only polyval which is itself a
+        // binary data type is unique in that it is the only polyval which is itself a ClassInfo type.
         return this;
     }
 }
