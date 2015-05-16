@@ -1,9 +1,11 @@
-package com.company;
+package com.company.blockfile;
 
 import com.company.caching.ObjectReferenceCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -11,27 +13,38 @@ import java.util.*;
 
 import static com.google.common.base.Preconditions.checkState;
 
-public class DataConverterByteStream {
+public class DataConverterByteStream implements Closeable {
     static final Logger logger = LoggerFactory.getLogger(DataConverterByteStream.class);
+    private final ObjectReferenceCache cache;
 
-    public static int getInt(ByteBuffer buffer) {
-        final StreamDataTypeAndLength type = getTypeAndLength(buffer);
+    // TODO: ByteBuffer needs wrapping for >2gig files due to int position limit.
+    // FileChannels can support multiple ByteBuffers so it's not a big deal.
+    // Check http://www.kdgregory.com/?page=java.byteBuffer
+    private final ByteBuffer buffer;
+
+    public DataConverterByteStream(ByteBuffer buffer) {
+        this.buffer = Objects.requireNonNull(buffer);
+        this.cache = new ObjectReferenceCache();
+    }
+
+    public int getInt() {
+        final StreamDataTypeAndLength type = getTypeAndLength();
         switch (type.type) {
             case INT_8:
             case INT_16:
             case INT_32:
-                return readCompressedInteger(buffer, type.length);
+                return readCompressedInteger(type.length);
             default:
                 logger.error("Unable to match type {} to a type of integral", type);
                 throw new RuntimeException("Unmatched type: " + type);
         }
     }
 
-    private static int getClassType(final ByteBuffer buffer) {
-        final StreamDataTypeAndLength type = getTypeAndLength(buffer);
+    private int getClassType() {
+        final StreamDataTypeAndLength type = getTypeAndLength();
         switch (type.type) {
             case CLASS_ID:
-                return readCompressedInteger(buffer, type.length);
+                return readCompressedInteger(type.length);
             default:
                 logger.error("Unable to match type {} to a type of ClassIDType", type.type);
                 throw new RuntimeException("Unmatched type: " + type.type);
@@ -39,19 +52,19 @@ public class DataConverterByteStream {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends ClassInfo> T get(ByteBuffer file) {
-        final int classId = getClassType(file);
+    public <T extends ClassInfo> T get() {
+        final int classId = getClassType();
         logger.debug("Searching for classid: {}", classId);
         for (ClassInfo.Type type1 : ClassInfo.Type.values()) {
             if (type1.getClassId() == classId) {
                 logger.debug("Found classid {} matches \"{}\"", classId, type1);
                 try {
-                    T result = (T) type1.getType().getConstructor(ByteBuffer.class).newInstance(file);
+                    T result = (T) type1.getType().getConstructor(DataConverterByteStream.class).newInstance(this);
 
                     // each class ends in an "CLASS_END" to know the literal end of the class object.
-                    byte endClassId = file.get();
+                    byte endClassId = buffer.get();
                     if (StreamDataType.CLASS_END.getKey() != endClassId) {
-                        logger.error("Unable to find end of class for {} at position {}.  Chances are the spec changed for this class.", type1, file.position());
+                        logger.error("Unable to find end of class for {} at position {}.  Chances are the spec changed for this class.", type1, buffer.position());
                         throw new RuntimeException("Unable to find end of class.");
                     }
                     return result;
@@ -63,55 +76,55 @@ public class DataConverterByteStream {
         throw new RuntimeException("Unable to find class type: " + classId);
     }
 
-    public static <T extends ClassInfo> Map<String, T> getStringMap(ByteBuffer buffer) {
-        int size = getInt(buffer);
+    public <T extends ClassInfo> Map<String, T> getStringMap() {
+        int size = getInt();
         Map<String, T> resultMap = new HashMap<>(size);
         for (int i = 0; i < size; i++) {
-            final String key = getString(buffer);
-            final T value = get(buffer);
+            final String key = getString();
+            final T value = get();
             resultMap.put(key, value);
         }
 
         return resultMap;
     }
 
-    public static <T extends ClassInfo> Map<String, T> getStringPointerMap(Class<T> clazz, ByteBuffer buffer) {
-        int size = getInt(buffer);
+    public <T extends ClassInfo> Map<String, T> getStringPointerMap(Class<T> clazz) {
+        int size = getInt();
         Map<String, T> resultMap = new HashMap<>(size);
         for (int i = 0; i < size; i++) {
-            final String key = getString(buffer);
-            final T value = readPointer(clazz, buffer);
+            final String key = getString();
+            final T value = readPointer(clazz);
             resultMap.put(key, value);
         }
         return resultMap;
     }
 
-    public static <T extends ClassInfo> T readPointer(Class<T> clazz, ByteBuffer buffer) {
-        final int type = getClassType(buffer);
+    public <T extends ClassInfo> T readPointer(Class<T> clazz) {
+        final int type = getClassType();
         final Optional<ClassInfo.Type> typeForId = ClassInfo.Type.getTypeForId(type);
         checkState(typeForId.isPresent());
         checkState(typeForId.get().getType().equals(clazz));
-        StreamDataTypeAndLength registeredFlag = getTypeAndLength(buffer);
+        StreamDataTypeAndLength registeredFlag = getTypeAndLength();
         boolean registered = registeredFlag.length != 0;
         if (registered) {
-            int objectId = readCompressedInteger(buffer, registeredFlag.length);
-            return ObjectReferenceCache.get().get(objectId);
+            int objectId = readCompressedInteger(registeredFlag.length);
+            return cache.get(objectId);
         }
         checkState(registeredFlag.type.equals(StreamDataType.OBJECT_ID));
         final int objectId = buffer.getInt(); // this is just raw, not sure why.
-        final T result = get(buffer);
-        ObjectReferenceCache.get().put(objectId, result);
+        final T result = get();
+        cache.put(objectId, result);
         return result;
     }
 
-    public static String getString(ByteBuffer buffer) {
+    public String getString() {
         // this logic is rather nonsensical.
         // If we know the length is zero why do we get the header for the std::string?
         // Also, why do we write the std::string header anyway?  We already know it's a string!
-        final int length = getInt(buffer);
-        final StreamDataTypeAndLength typeAndLength = getTypeAndLength(buffer);
+        final int length = getInt();
+        final StreamDataTypeAndLength typeAndLength = getTypeAndLength();
         if (length == 0) {
-            return new String("");
+            return "";
         }
         checkState(typeAndLength.type.equals(StreamDataType.BYTE_STREAM));
         buffer.position(buffer.position() + typeAndLength.length); // length is written again as a byte.
@@ -121,15 +134,15 @@ public class DataConverterByteStream {
         return new String(cString, StandardCharsets.UTF_8);
     }
 
-    public static StreamDataTypeAndLength getTypeAndLength(ByteBuffer buffer) {
+    public StreamDataTypeAndLength getTypeAndLength() {
         final int typeIndex = buffer.get() & 0xFF;
         final int length = typeIndex >> 4;
         StreamDataType type = StreamDataType.values()[typeIndex & 0x0F];
-        logger.debug("Fetching type {}", type);
+        logger.debug("Fetching type {} of length {}", type, length);
         return new StreamDataTypeAndLength(type, length);
     }
 
-    public static int readCompressedInteger(ByteBuffer buffer, final int length) {
+    public int readCompressedInteger(final int length) {
         int result = 0;
         for (int i = 0; i < length; i++) {
             result += (buffer.get() & 0xff) << (8 * i);
@@ -138,7 +151,7 @@ public class DataConverterByteStream {
         return result;
     }
 
-    public static long readCompressedLong(ByteBuffer buffer, final int length) {
+    public long readCompressedLong(final int length) {
         long value = 0;
         for (int i = 0; i < length; i++) {
             value += ((long) buffer.get() & 0xffL) << (8 * i);
@@ -147,18 +160,40 @@ public class DataConverterByteStream {
         return value;
     }
 
-    public static List<String> getStringList(ByteBuffer buffer) {
-        final int size = getInt(buffer);
+    public List<String> getStringList() {
+        final int size = getInt();
         List<String> result = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
-            result.add(getString(buffer));
+            result.add(getString());
         }
         return result;
     }
 
-    public static double getDouble(final ByteBuffer buffer) {
-        final StreamDataTypeAndLength typeAndLength = getTypeAndLength(buffer);
-        return Double.longBitsToDouble(readCompressedLong(buffer, typeAndLength.length));
+    public double getDouble() {
+        final StreamDataTypeAndLength typeAndLength = getTypeAndLength();
+        return Double.longBitsToDouble(readCompressedLong(typeAndLength.length));
+    }
+
+    public byte getByte() {
+        return buffer.get();
+    }
+
+    public byte[] getBytes(byte[] string) {
+        buffer.get(string);
+        return string;
+    }
+
+    public long fileSize() {
+        return buffer.limit();
+    }
+
+    public long position() {
+        return buffer.position();
+    }
+
+    @Override
+    public void close() throws IOException {
+        cache.close();
     }
 
     enum StreamDataType {
@@ -178,7 +213,7 @@ public class DataConverterByteStream {
 
         private final byte key;
 
-        private StreamDataType(final int key) {
+        StreamDataType(final int key) {
             this.key = (byte) ((byte) key & 0xFF);
         }
 
@@ -203,5 +238,9 @@ public class DataConverterByteStream {
                     ", length=" + length +
                     '}';
         }
+    }
+
+    public void seek(long position) {
+        buffer.position((int)position);
     }
 }

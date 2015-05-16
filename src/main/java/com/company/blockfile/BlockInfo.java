@@ -1,14 +1,12 @@
-package com.company;
-
-import java.nio.ByteBuffer;
+package com.company.blockfile;
 
 public class BlockInfo extends ClassInfo {
     private final AllocateFlag flag;
     private final DataBlock dataBlock;
-    public BlockInfo(ByteBuffer input) {
-        super(input);
-        flag = AllocateFlag.values()[DataConverterByteStream.getInt(input)];
-        dataBlock = DataConverterByteStream.get(input);
+    public BlockInfo(DataConverterByteStream converter) {
+        super(converter);
+        flag = AllocateFlag.values()[converter.getInt()];
+        dataBlock = converter.get();
         if (dataBlock.getOffset() == -1)
             dataBlock.setOffset(0);
     }

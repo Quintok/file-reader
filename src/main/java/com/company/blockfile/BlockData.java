@@ -1,27 +1,26 @@
-package com.company;
+package com.company.blockfile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 
 public class BlockData extends ClassInfo{
     static final Logger logger = LoggerFactory.getLogger(BlockData.class);
     private Set<Integer> unusedBlocks;
     private List<BlockInfo> dataBlocks;
-    public BlockData(ByteBuffer input) {
-        super(input);
-        final int unusedBlocksSize = DataConverterByteStream.getInt(input);
+    public BlockData(DataConverterByteStream converter) {
+        super(converter);
+        final int unusedBlocksSize = converter.getInt();
         this.unusedBlocks = new HashSet<>(unusedBlocksSize);
         for(int i = 0; i < unusedBlocksSize; i++) {
-            unusedBlocks.add(DataConverterByteStream.getInt(input));
+            unusedBlocks.add(converter.getInt());
         }
         logger.info("{} of unused blocks in file", unusedBlocksSize);
-        final int dataBlocksSize = DataConverterByteStream.getInt(input);
+        final int dataBlocksSize = converter.getInt();
         this.dataBlocks = new ArrayList<>(dataBlocksSize);
         for(int i = 0; i < dataBlocksSize; i++) {
-            dataBlocks.add(DataConverterByteStream.get(input));
+            dataBlocks.add(converter.get());
         }
         logger.info("{} datablocks of file", dataBlocksSize);
     }

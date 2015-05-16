@@ -1,40 +1,38 @@
 package com.company.polydata;
 
-import com.company.ClassInfo;
-import com.company.DataConverterByteStream;
-
-import java.nio.ByteBuffer;
+import com.company.blockfile.ClassInfo;
+import com.company.blockfile.DataConverterByteStream;
 
 public class PolyValue extends ClassInfo {
 
     final DataType result;
 
-    public PolyValue(ByteBuffer input) {
-        super(input);
-        Type type = Type.values()[DataConverterByteStream.getInt(input)];
+    public PolyValue(DataConverterByteStream converter) {
+        super(converter);
+        Type type = Type.values()[converter.getInt()];
         switch(type) {
             case NULL:
                 result = new NullDataType();
                 break;
             case BOOL:
                 BoolDataType dataType = new BoolDataType();
-                result = dataType.read(input);
+                result = dataType.read(converter);
                 break;
             case BINARY:
-                BinaryDataType binaryDataType = new BinaryDataType(input);
-                result = binaryDataType.read(input);
+                BinaryDataType binaryDataType = new BinaryDataType(converter);
+                result = binaryDataType.read(converter);
                 break;
             case INT_32:
                 IntegerDataType integerDataType = new IntegerDataType();
-                result = integerDataType.read(input);
+                result = integerDataType.read(converter);
                 break;
             case FLOAT_64:
                 DoubleDataType doubleDataType = new DoubleDataType();
-                result = doubleDataType.read(input);
+                result = doubleDataType.read(converter);
                 break;
             case STRING:
                 StringDataType stringDataType = new StringDataType();
-                result = stringDataType.read(input);
+                result = stringDataType.read(converter);
                 break;
             default:
                 throw new UnsupportedOperationException("unsupported polyvalue type." + type);

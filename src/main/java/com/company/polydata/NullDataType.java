@@ -1,11 +1,11 @@
 package com.company.polydata;
 
-import java.nio.ByteBuffer;
+import com.company.blockfile.DataConverterByteStream;
 
 public class NullDataType implements DataType<NullDataType> {
 
     @Override
-    public NullDataType read(ByteBuffer buffer) {
+    public NullDataType read(DataConverterByteStream converter) {
         return this;
     }
 

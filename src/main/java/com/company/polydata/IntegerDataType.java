@@ -1,8 +1,6 @@
 package com.company.polydata;
 
-import com.company.DataConverterByteStream;
-
-import java.nio.ByteBuffer;
+import com.company.blockfile.DataConverterByteStream;
 
 
 public class IntegerDataType implements DataType<IntegerDataType> {
@@ -10,8 +8,8 @@ public class IntegerDataType implements DataType<IntegerDataType> {
     private int value;
 
     @Override
-    public IntegerDataType read(ByteBuffer buffer) {
-        this.value = DataConverterByteStream.getInt(buffer);
+    public IntegerDataType read(DataConverterByteStream converter) {
+        this.value = converter.getInt();
         return this;
     }
 

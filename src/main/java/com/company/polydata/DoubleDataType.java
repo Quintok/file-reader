@@ -1,15 +1,13 @@
 package com.company.polydata;
 
-import com.company.DataConverterByteStream;
-
-import java.nio.ByteBuffer;
+import com.company.blockfile.DataConverterByteStream;
 
 public class DoubleDataType implements DataType<DoubleDataType>{
     private double value;
 
     @Override
-    public DoubleDataType read(ByteBuffer buffer) {
-        value = DataConverterByteStream.getDouble(buffer);
+    public DoubleDataType read(DataConverterByteStream converter) {
+        value = converter.getDouble();
         return this;
     }
 

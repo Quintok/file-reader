@@ -1,10 +1,9 @@
-package com.company.Database;
+package com.company.database;
 
-import com.company.ClassInfo;
-import com.company.DataConverterByteStream;
+import com.company.blockfile.ClassInfo;
+import com.company.blockfile.DataConverterByteStream;
 import com.company.polydata.PropertySet;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 
 public class SObjectInfo extends ClassInfo {
@@ -13,6 +12,8 @@ public class SObjectInfo extends ClassInfo {
     private final PropertySet propertySet;
     private final List<String> subObjectNames;
     private final Map<String, SObjectInfo> children;
+
+
 
     enum Types {
         MultiMap,
@@ -23,16 +24,39 @@ public class SObjectInfo extends ClassInfo {
         Join,
         Index,
         Folder,
-        IndexUnique
+        IndexUnique;
+    }
+    public SObjectInfo(DataConverterByteStream converter) {
+        super(converter);
+        objectType = Types.valueOf(converter.getString());
+        blockNumber = converter.getInt();
+        propertySet = converter.get();
+        subObjectNames = converter.getStringList();
+        children = converter.getStringPointerMap(SObjectInfo.class);
     }
 
-    public SObjectInfo(ByteBuffer input) {
-        super(input);
-        objectType = Types.valueOf(DataConverterByteStream.getString(input));
-        blockNumber = DataConverterByteStream.getInt(input);
-        propertySet = DataConverterByteStream.get(input);
-        subObjectNames = DataConverterByteStream.getStringList(input);
-        children = DataConverterByteStream.getStringPointerMap(SObjectInfo.class, input);
+    public Types getObjectType() {
+        return objectType;
+    }
+
+    public int getBlockNumber() {
+        return blockNumber;
+    }
+
+    public PropertySet getPropertySet() {
+        return propertySet;
+    }
+
+    public List<String> getSubObjectNames() {
+        return subObjectNames;
+    }
+
+    public Map<String, SObjectInfo> getChildren() {
+        return children;
+    }
+
+    public Optional<SObjectInfo> getChild(String tables) {
+        return Optional.ofNullable(children.get(tables));
     }
 
     @Override

@@ -1,9 +1,7 @@
-package com.company;
+package com.company.blockfile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.ByteBuffer;
 
 public class DataBlock extends ClassInfo {
     private static final Logger logger = LoggerFactory.getLogger(DataBlock.class);
@@ -11,13 +9,13 @@ public class DataBlock extends ClassInfo {
     long offset;
     final long size;
 
-    public DataBlock(ByteBuffer buffer) {
-        super(buffer);
-        DataConverterByteStream.StreamDataTypeAndLength typeAndLength = DataConverterByteStream.getTypeAndLength(buffer);
-        offset = DataConverterByteStream.readCompressedLong(buffer, typeAndLength.length);
+    public DataBlock(DataConverterByteStream converter) {
+        super(converter);
+        DataConverterByteStream.StreamDataTypeAndLength typeAndLength = converter.getTypeAndLength();
+        offset = converter.readCompressedLong(typeAndLength.length);
         logger.debug("Offset: {} from {}", offset, typeAndLength);
-        typeAndLength = DataConverterByteStream.getTypeAndLength(buffer);
-        this.size = DataConverterByteStream.readCompressedLong(buffer, typeAndLength.length);
+        typeAndLength = converter.getTypeAndLength();
+        this.size = converter.readCompressedLong(typeAndLength.length);
         logger.debug("Size: {} from {}", size, typeAndLength);
     }
 
@@ -33,7 +31,7 @@ public class DataBlock extends ClassInfo {
     public String toString() {
         return "DataBlock{" +
                 "offset=" + offset +
-                ", size=" + size +
+                ", fileSize=" + size +
                 '}';
     }
 

@@ -2,8 +2,10 @@ package com.company;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.company.Database.Database;
-import com.company.Database.SObjectInfo;
+import com.company.blockfile.*;
+import com.company.database.Database;
+import com.company.database.RowSet;
+import com.company.database.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +16,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class FileLoader {
     private static final Logger logger = LoggerFactory.getLogger(FileLoader.class);
@@ -36,14 +39,20 @@ public class FileLoader {
             MappedByteBuffer buffer = fileChannel.map(
                     FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-            final Optional<BlockedFileManager> headerOpt = BlockedFileManager.fromMappedFile(buffer);
-            BlockedFileManager blockedFileManager = headerOpt.get();
-            final BlockInfo block = blockedFileManager.getBlock(0);
-            buffer.position((int) block.getDataBlock().getOffset());
-            Database d = DataConverterByteStream.get(buffer);
+            try(DataConverterByteStream converter = new DataConverterByteStream(buffer)) {
+                final Optional<BlockedFileManager> headerOpt = BlockedFileManager.fromMappedFile(converter);
+                BlockedFileManager blockedFileManager = headerOpt.get();
+                final BlockInfo block = blockedFileManager.getBlock(0);
+                buffer.position((int) block.getDataBlock().getOffset());
+                Database d = converter.get();
+                Table t = d.getTable("__SUPER_CHANNEL__").get();
+                final Stream<RowSet> rows = t.getRows(t.getColumns());
+                rows.forEach(row -> System.out.println(String.format("%s = %s", row.get(0), row.get(1))));
 
-            if(bfview)
-                bfView(blockedFileManager);
+                if(bfview)
+                    bfView(blockedFileManager);
+            }
+
         }
     }
 

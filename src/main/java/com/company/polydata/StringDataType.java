@@ -1,15 +1,13 @@
 package com.company.polydata;
 
-import com.company.DataConverterByteStream;
-
-import java.nio.ByteBuffer;
+import com.company.blockfile.DataConverterByteStream;
 
 public class StringDataType implements DataType<StringDataType>{
     private String value;
 
     @Override
-    public StringDataType read(ByteBuffer buffer) {
-        this.value = DataConverterByteStream.getString(buffer);
+    public StringDataType read(DataConverterByteStream converter) {
+        this.value = converter.getString();
         return this;
     }
 

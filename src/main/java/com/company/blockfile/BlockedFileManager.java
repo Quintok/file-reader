@@ -1,9 +1,9 @@
-package com.company;
+package com.company.blockfile;
 
+import com.company.WorkingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -12,9 +12,9 @@ public class BlockedFileManager {
     private static final Logger logger = LoggerFactory.getLogger(BlockedFileManager.class);
     private static final String ID_STRING = "STRBF";
     private static final int CURRENT_VERSION = 0x101;
+    private final DataConverterByteStream converter;
     private final int version;
     private final WorkingMode workingMode;
-    private final ByteBuffer buffer;
     private DataBlock primaryDataBlock;
     private DataBlock primaryFreeDataBlock;
     private DataBlock secondaryDataBlock;
@@ -22,14 +22,15 @@ public class BlockedFileManager {
     private BlockData blockData;
     private FreeBlockManager freeBlockManager;
 
-    public BlockedFileManager(ByteBuffer buffer,
+    public BlockedFileManager(
+                              DataConverterByteStream converter,
                               int version,
                               WorkingMode workingMode,
                               DataBlock primaryDataBlock,
                               DataBlock primaryFreeDataBlock,
                               DataBlock secondaryDataBlock,
                               DataBlock secondaryFreeDataBlock) {
-        this.buffer = buffer;
+        this.converter = converter;
         this.version = version;
         this.workingMode = workingMode;
         this.primaryDataBlock = primaryDataBlock;
@@ -47,24 +48,24 @@ public class BlockedFileManager {
         }
     }
 
-    static Optional<BlockedFileManager> fromMappedFile(final ByteBuffer buffer) {
-        buffer.position(0);
+    public static Optional<BlockedFileManager> fromMappedFile(DataConverterByteStream converter) {
+        converter.seek(0);
         logger.info("Seeking to {} for opening string", 0);
-        final String s = readString(buffer);
+        final String s = readString(converter);
         logger.info("Found opening string \"{}\"", s);
         if (!ID_STRING.equals(s))
             return Optional.empty();
 
-        buffer.position(6);
+        converter.seek(6);
         logger.info("Seeking to {} for file format version", 6);
-        final int version = DataConverterByteStream.getInt(buffer);
+        final int version = converter.getInt();
         logger.info("Found version number {}", version);
         if (version > CURRENT_VERSION)
             return Optional.empty();
 
-        buffer.position(26);
+        converter.seek(26);
         logger.info("Seeking to {} for workmode", 26);
-        byte b = buffer.get();
+        byte b = converter.getByte();
         WorkingMode workingMode = WorkingMode.PRIMARY;
         for (WorkingMode mode : WorkingMode.values()) {
             if (mode.ordinal() == ((int) b)) {
@@ -81,19 +82,19 @@ public class BlockedFileManager {
         DataBlock secondaryDataBlock;
         DataBlock secondFreeDataBlock;
 
-        buffer.position(27);
+        converter.seek(27);
         logger.info("Seeking to {} for primary workmode blocks", 27);
-        primaryDataBlock = DataConverterByteStream.get(buffer);
+        primaryDataBlock = converter.get();
         logger.info("Primary block {}", primaryDataBlock);
-        primaryFreeDataBlock = DataConverterByteStream.get(buffer);
+        primaryFreeDataBlock = converter.get();
         logger.info("Primary free block {}", primaryFreeDataBlock);
-        buffer.position(75);
+        converter.seek(75);
         logger.info("Seeking to {} for secondary workmode blocks", 75);
-        secondaryDataBlock = DataConverterByteStream.get(buffer);
+        secondaryDataBlock = converter.get();
         logger.info("Secondary block {}", secondaryDataBlock);
-        secondFreeDataBlock = DataConverterByteStream.get(buffer);
+        secondFreeDataBlock = converter.get();
         logger.info("Secondary free block {}", secondFreeDataBlock);
-        BlockedFileManager blockedFileManager = new BlockedFileManager(buffer,
+        BlockedFileManager blockedFileManager = new BlockedFileManager(converter,
                 version,
                 workingMode,
                 primaryDataBlock,
@@ -109,28 +110,20 @@ public class BlockedFileManager {
      *
      * @return ASCII string from position.
      */
-    private static String readString(ByteBuffer bytes) {
-        int size = 0;
-        bytes.mark();
-        while (bytes.getChar() != '\0') {
-            size++;
-        }
-        bytes.reset();
-
-        byte[] string = new byte[size];
-        bytes.get(string);
-
+    private static String readString(DataConverterByteStream bytes) {
+        byte[] string = new byte[ID_STRING.length()];
+        bytes.getBytes(string);
         return new String(string, StandardCharsets.US_ASCII);
     }
 
     private void loadFreeBlockManager(DataBlock freeDataBlock) {
-        buffer.position((int) freeDataBlock.getOffset());
-        this.freeBlockManager = DataConverterByteStream.get(buffer);
+        converter.seek((int) freeDataBlock.getOffset());
+        this.freeBlockManager = converter.get();
     }
 
     private void loadAllocatedBlock(DataBlock dataBlock) {
-        buffer.position((int) dataBlock.getOffset());
-        this.blockData = DataConverterByteStream.get(buffer);
+        converter.seek(dataBlock.getOffset());
+        this.blockData = converter.get();
     }
 
     public int getVersion() {
@@ -148,7 +141,7 @@ public class BlockedFileManager {
     }
 
     public long getSize() {
-        return buffer.limit();
+        return converter.fileSize();
     }
 
     public String getIdString() {

@@ -4,7 +4,7 @@
            xmlns="http://www.hazelcast.com/schema/config">
     <cache name="objectreference">
         <key-type class-name="java.lang.Integer" />
-        <value-type class-name="com.company.ClassInfo" />
+        <value-type class-name="com.company.blockfile.ClassInfo" />
         <statistics-enabled>true</statistics-enabled>
         <management-enabled>true</management-enabled>
 

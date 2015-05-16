@@ -1,25 +1,24 @@
 package com.company.polydata;
 
-import com.company.ClassInfo;
-import com.company.DataConverterByteStream;
+import com.company.blockfile.ClassInfo;
+import com.company.blockfile.DataConverterByteStream;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class BinaryDataType extends ClassInfo implements DataType<BinaryDataType> {
     private byte[] value;
 
-    public BinaryDataType(ByteBuffer input) {
-        super(input);
+    public BinaryDataType(DataConverterByteStream converter) {
+        super(converter);
     }
 
     @Override
-    public BinaryDataType read(ByteBuffer buffer) {
+    public BinaryDataType read(DataConverterByteStream converter) {
         // Integer is mis-serialized as a bytestream.
-        final DataConverterByteStream.StreamDataTypeAndLength length = DataConverterByteStream.getTypeAndLength(buffer);
-        final int i = DataConverterByteStream.readCompressedInteger(buffer, length.length);
+        final DataConverterByteStream.StreamDataTypeAndLength length = converter.getTypeAndLength();
+        final int i = converter.readCompressedInteger(length.length);
         value = new byte[i];
-        buffer.get(value);
+        converter.getBytes(value);
 
         return this;
     }

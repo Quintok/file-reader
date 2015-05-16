@@ -1,16 +1,16 @@
-package com.company;
+package com.company.blockfile;
 
-import com.company.Database.Database;
-import com.company.Database.SObjectInfo;
+import com.company.database.Database;
+import com.company.database.SObjectInfo;
 import com.company.polydata.*;
 
 import java.io.Serializable;
-import java.nio.ByteBuffer;
 import java.util.Optional;
 
 public abstract class ClassInfo implements Serializable {
 
-    public ClassInfo(ByteBuffer input) {
+    @SuppressWarnings("unused")
+    public ClassInfo(DataConverterByteStream converter) {
 
     }
 
