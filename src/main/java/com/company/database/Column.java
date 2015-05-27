@@ -1,5 +1,8 @@
 package com.company.database;
 
+import com.company.polydata.PolyValue;
+import com.company.polydata.PropertySet;
+
 public class Column {
     private final Table parent;
     private final String name;
@@ -9,5 +12,9 @@ public class Column {
         this.parent = parent;
         this.name = name;
         this.value = value;
+    }
+
+    public PolyValue getProperty(PropertySet.Key key) {
+        return value.getPropertySet().getProperties().get(key);
     }
 }

@@ -1,5 +1,7 @@
 package com.company.database;
 
+import com.company.polydata.PolyValue;
+import com.company.polydata.PropertySet;
 import com.google.common.collect.Lists;
 
 import java.util.List;
@@ -36,5 +38,9 @@ public class Table {
 
     public Stream<RowSet> getRows(List<Column> columns) {
         return Stream.empty();
+    }
+
+    public PolyValue getProperty(PropertySet.Key key) {
+        return tableMetadata.getPropertySet().getProperties().get(key);
     }
 }

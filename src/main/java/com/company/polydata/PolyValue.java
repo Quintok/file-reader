@@ -6,10 +6,11 @@ import com.company.blockfile.DataConverterByteStream;
 public class PolyValue extends ClassInfo {
 
     final DataType result;
+    final Type type;
 
     public PolyValue(DataConverterByteStream converter) {
         super(converter);
-        Type type = Type.values()[converter.getInt()];
+        type = Type.values()[converter.getInt()];
         switch(type) {
             case NULL:
                 result = new NullDataType();
@@ -39,12 +40,20 @@ public class PolyValue extends ClassInfo {
         }
     }
 
+    public Type getType() {
+        return type;
+    }
+
+    public DataType getResult() {
+        return result;
+    }
+
     @Override
     public String toString() {
         return result.toString();
     }
 
-    enum Type {
+    public enum Type {
         NULL,
         BOOL,
         CHAR,

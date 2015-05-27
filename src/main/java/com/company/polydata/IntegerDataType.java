@@ -13,9 +13,13 @@ public class IntegerDataType implements DataType<IntegerDataType> {
         return this;
     }
 
+    public int getValue() {
+        return value;
+    }
+
     @Override
     public String toString() {
-        return "IntegerDataType{" +
+        return "IntegerColumn{" +
                 "value=" + value +
                 '}';
     }

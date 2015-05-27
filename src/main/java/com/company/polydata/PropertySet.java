@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PropertySet extends ClassInfo {
-    enum Key {
+    public enum Key {
         ObjectType,
         FORWARDTABLE,
         BACKWARDTABLE,
