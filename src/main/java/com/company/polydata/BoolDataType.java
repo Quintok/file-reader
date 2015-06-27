@@ -4,6 +4,8 @@ import com.company.blockfile.DataConverterByteStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 public class BoolDataType implements DataType<BoolDataType> {
     Logger logger = LoggerFactory.getLogger(BoolDataType.class);
     boolean value;
@@ -19,6 +21,11 @@ public class BoolDataType implements DataType<BoolDataType> {
         }
         this.value = b > 0;
         return this;
+    }
+
+    @Override
+    public Optional<Boolean> asBoolean() {
+        return Optional.of(value);
     }
 
     @Override

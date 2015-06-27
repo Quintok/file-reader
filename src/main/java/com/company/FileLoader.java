@@ -45,7 +45,7 @@ public class FileLoader {
                 final BlockInfo block = blockedFileManager.getBlock(0);
                 buffer.position((int) block.getDataBlock().getOffset());
                 Database d = converter.get();
-                Table t = d.getTable("__SUPER_CHANNEL__").get();
+                Table t = d.getTable("STR_Database_Root").get();
                 final Stream<RowSet> rows = t.getRows(t.getColumns());
                 rows.forEach(row -> System.out.println(String.format("%s = %s", row.get(0), row.get(1))));
 

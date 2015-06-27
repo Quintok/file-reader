@@ -3,6 +3,7 @@ package com.company.polydata;
 import com.company.blockfile.DataConverterByteStream;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * Ideally this would be an abstract class as the constructor would be used instead of the read method
@@ -10,4 +11,6 @@ import java.io.Serializable;
  */
 public interface DataType<T extends DataType<T>> extends Serializable {
     T read(DataConverterByteStream converter);
+    default Optional<Boolean> asBoolean() { return Optional.empty(); }
+    default Optional<Integer> asInteger() { return Optional.empty(); }
 }

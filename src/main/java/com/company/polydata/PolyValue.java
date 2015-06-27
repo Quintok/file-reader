@@ -5,7 +5,7 @@ import com.company.blockfile.DataConverterByteStream;
 
 public class PolyValue extends ClassInfo {
 
-    final DataType result;
+    private final DataType result;
 
     public PolyValue(DataConverterByteStream converter) {
         super(converter);
@@ -42,6 +42,10 @@ public class PolyValue extends ClassInfo {
     @Override
     public String toString() {
         return result.toString();
+    }
+
+    public DataType getData() {
+        return result;
     }
 
     enum Type {

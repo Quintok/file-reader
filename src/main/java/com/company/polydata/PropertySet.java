@@ -3,12 +3,11 @@ package com.company.polydata;
 import com.company.blockfile.ClassInfo;
 import com.company.blockfile.DataConverterByteStream;
 
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 public class PropertySet extends ClassInfo {
-    enum Key {
+    public enum Key {
         ObjectType,
         FORWARDTABLE,
         BACKWARDTABLE,
@@ -30,19 +29,19 @@ public class PropertySet extends ClassInfo {
         CurrentLoadFactor,
         LoadFactor
     }
-    private final Map<Key, PolyValue> properties;
+    private final Map<Key, DataType<? extends DataType>> properties;
     public PropertySet(DataConverterByteStream converter) {
         super(converter);
         final Map<String, PolyValue> stringMap = converter.getStringMap();
         properties = new HashMap<>(stringMap.size());
         for (Map.Entry<String, PolyValue> polyEntry : stringMap.entrySet()) {
-            properties.put(Key.valueOf(polyEntry.getKey()), polyEntry.getValue());
+            properties.put(Key.valueOf(polyEntry.getKey()), polyEntry.getValue().getData());
         }
 
 
     }
 
-    public Map<Key, PolyValue> getProperties() {
+    public Map<Key, DataType<? extends DataType>> getProperties() {
         return properties;
     }
 

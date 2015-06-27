@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 public class Table {
     private final SObjectInfo tableMetadata;
     private final List<Column> columns;
-    private final String IS_DELETED_KEY = "STR_IsDeleted";
+    private static final String IS_DELETED_KEY = "STR_IsDeleted";
 
     public Table(final SObjectInfo tableMetadata) {
         Objects.requireNonNull(tableMetadata);
@@ -35,6 +35,7 @@ public class Table {
     }
 
     public Stream<RowSet> getRows(List<Column> columns) {
+        final Column column = columns.get(0);
         return Stream.empty();
     }
 }
