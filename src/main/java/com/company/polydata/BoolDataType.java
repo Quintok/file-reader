@@ -11,14 +11,15 @@ public class BoolDataType implements DataType<BoolDataType> {
     boolean value;
     @Override
     public BoolDataType read(DataConverterByteStream converter) {
+        final DataConverterByteStream.StreamDataTypeAndLength typeAndLength = converter.getTypeAndLength();
+        // if the length is zero it is false.
+        if(typeAndLength.length == 0) {
+            this.value = false;
+            return this;
+        }
+
         byte b = converter.getByte();
 
-        // TODO: Work out what the hell is going on here.
-        if(b == 22) {
-            byte oldB = b;
-            b = converter.getByte();
-            logger.warn("Re reading boolean polyVal for no obvious reason.  b={}, oldB={}, position={}", b, oldB, converter.position());
-        }
         this.value = b > 0;
         return this;
     }
