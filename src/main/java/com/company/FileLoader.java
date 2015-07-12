@@ -9,14 +9,13 @@ import com.company.database.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public class FileLoader {
     private static final Logger logger = LoggerFactory.getLogger(FileLoader.class);
@@ -28,34 +27,6 @@ public class FileLoader {
 
     @Parameter(names = "-help", description = "This help text", help = true, hidden = true)
     private boolean help;
-
-    public void loadFile(JCommander jCommander) throws IOException {
-        if (help) {
-            jCommander.usage();
-            return;
-        }
-        logger.info("Loading file {}", filename);
-        try (FileChannel fileChannel = FileChannel.open(Paths.get(filename), StandardOpenOption.READ)) {
-            MappedByteBuffer buffer = fileChannel.map(
-                    FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            try(DataConverterByteStream converter = new DataConverterByteStream(buffer)) {
-                final Optional<BlockedFileManager> headerOpt = BlockedFileManager.fromMappedFile(converter);
-                BlockedFileManager blockedFileManager = headerOpt.get();
-                final BlockInfo block = blockedFileManager.getBlock(0);
-                buffer.position((int) block.getDataBlock().getOffset());
-                Database d = converter.get();
-                d.setBlockFileManager(blockedFileManager);
-                Table t = d.getTable("STR_Database_Root").get();
-                final Iterable<RowSet> rows = t.getRows(t.getColumns());
-                rows.forEach(row -> System.out.println(String.format("%s = %s", row.get(0), row.get(1))));
-
-                if(bfview)
-                    bfView(blockedFileManager);
-            }
-
-        }
-    }
 
     private static void bfView(BlockedFileManager manager) {
         final String line = "\n---------------------------------------------------------------------\n";
@@ -80,9 +51,9 @@ public class FileLoader {
         long bytesFree = 0L;
 
         int i = 0;
-        for(BlockInfo block : manager.getBlocks()) {
+        for (BlockInfo block : manager.getBlocks()) {
             System.out.print(String.format("Block #%s ", i));
-            switch(block.getFlag()) {
+            switch (block.getFlag()) {
                 case ALLOCATED:
                     System.out.println("{allocated}");
                     bytesAllocated += block.getSize();
@@ -101,7 +72,7 @@ public class FileLoader {
 
         final FreeBlockManager freeBlockManager = manager.getFreeBlockManager();
         i = 0;
-        for(DataBlock block : freeBlockManager.getBlocks()) {
+        for (DataBlock block : freeBlockManager.getBlocks()) {
             System.out.println(String.format("Free Block #%s", i));
             printBlock("", block);
             bytesFree += block.getSize();
@@ -109,10 +80,38 @@ public class FileLoader {
         }
         System.out.println(String.format("Total Bytes used %s", bytesAllocated));
         System.out.println(String.format("Total Bytes free %s", bytesFree));
-        System.out.println(String.format("Utalisation: %f", (double)bytesAllocated / (double)manager.getSize()));
+        System.out.println(String.format("Utalisation: %f", (double) bytesAllocated / (double) manager.getSize()));
     }
 
     private static void printBlock(String s, DataBlock dataBlock) {
         System.out.println(String.format("%s: offset = %s, length = %s", s, dataBlock.getOffset(), dataBlock.getSize()));
+    }
+
+    public void loadFile(JCommander jCommander) throws IOException {
+        if (help) {
+            jCommander.usage();
+            return;
+        }
+        logger.info("Loading file {}", filename);
+        try (FileChannel fileChannel = FileChannel.open(Paths.get(filename), StandardOpenOption.READ)) {
+            MappedByteBuffer buffer = fileChannel.map(
+                    FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
+            try (ByteStreamConverter converter = new DataConverterByteStream(buffer)) {
+                final Optional<BlockedFileManager> headerOpt = BlockedFileManager.fromMappedFile(converter);
+                BlockedFileManager blockedFileManager = headerOpt.get();
+                final BlockInfo block = blockedFileManager.getBlock(0);
+                buffer.position((int) block.getDataBlock().getOffset());
+                Database d = converter.get();
+                d.setBlockFileManager(blockedFileManager);
+                Table t = d.getTable("STR_Database_Root").get();
+                final Iterable<RowSet> rows = t.getRows(t.getColumns());
+                rows.forEach(row -> System.out.println(String.format("%s = %s", row.get(0), row.get(1))));
+
+                if (bfview)
+                    bfView(blockedFileManager);
+            }
+
+        }
     }
 }

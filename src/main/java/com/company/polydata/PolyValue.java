@@ -1,16 +1,16 @@
 package com.company.polydata;
 
+import com.company.blockfile.ByteStreamConverter;
 import com.company.blockfile.ClassInfo;
-import com.company.blockfile.DataConverterByteStream;
 
 public class PolyValue extends ClassInfo {
 
     private final DataType result;
 
-    public PolyValue(DataConverterByteStream converter) {
+    public PolyValue(ByteStreamConverter converter) {
         super(converter);
         StorageType type = StorageType.fromValue(converter.getInt());
-        switch(type) {
+        switch (type) {
             case ERROR:
                 result = new NullDataType();
                 break;
@@ -78,7 +78,7 @@ public class PolyValue extends ClassInfo {
 
         public static StorageType fromValue(final int value) {
             for (StorageType type : StorageType.values()) {
-                if(type.value == value)
+                if (type.value == value)
                     return type;
             }
 

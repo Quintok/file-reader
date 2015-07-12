@@ -4,7 +4,6 @@ import com.company.caching.ObjectReferenceCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
@@ -13,7 +12,7 @@ import java.util.*;
 
 import static com.google.common.base.Preconditions.checkState;
 
-public class DataConverterByteStream implements Closeable {
+public class DataConverterByteStream implements ByteStreamConverter {
     static final Logger logger = LoggerFactory.getLogger(DataConverterByteStream.class);
     private final ObjectReferenceCache cache;
 
@@ -27,6 +26,7 @@ public class DataConverterByteStream implements Closeable {
         this.cache = new ObjectReferenceCache();
     }
 
+    @Override
     public int getInt() {
         final StreamDataTypeAndLength type = getTypeAndLength();
         switch (type.type) {
@@ -51,6 +51,7 @@ public class DataConverterByteStream implements Closeable {
         }
     }
 
+    @Override
     @SuppressWarnings("unchecked")
     public <T extends ClassInfo> T get() {
         final int classId = getClassType();
@@ -59,7 +60,7 @@ public class DataConverterByteStream implements Closeable {
             if (type1.getClassId() == classId) {
                 logger.debug("Found classid {} matches \"{}\"", classId, type1);
                 try {
-                    T result = (T) type1.getType().getConstructor(DataConverterByteStream.class).newInstance(this);
+                    T result = (T) type1.getType().getConstructor(ByteStreamConverter.class).newInstance(this);
 
                     // each class ends in an "CLASS_END" to know the literal end of the class object.
                     byte endClassId = buffer.get();
@@ -76,6 +77,7 @@ public class DataConverterByteStream implements Closeable {
         throw new RuntimeException("Unable to find class type: " + classId);
     }
 
+    @Override
     public <T extends ClassInfo> Map<String, T> getStringMap() {
         int size = getInt();
         Map<String, T> resultMap = new HashMap<>(size);
@@ -88,6 +90,7 @@ public class DataConverterByteStream implements Closeable {
         return resultMap;
     }
 
+    @Override
     public <T extends ClassInfo> Map<String, T> getStringPointerMap(Class<T> clazz) {
         int size = getInt();
         Map<String, T> resultMap = new HashMap<>(size);
@@ -99,6 +102,7 @@ public class DataConverterByteStream implements Closeable {
         return resultMap;
     }
 
+    @Override
     public <T extends ClassInfo> T readPointer(Class<T> clazz) {
         final int type = getClassType();
         final Optional<ClassInfo.Type> typeForId = ClassInfo.Type.getTypeForId(type);
@@ -117,6 +121,7 @@ public class DataConverterByteStream implements Closeable {
         return result;
     }
 
+    @Override
     public String getString() {
         // this logic is rather nonsensical.
         // If we know the length is zero why do we get the header for the std::string?
@@ -134,6 +139,7 @@ public class DataConverterByteStream implements Closeable {
         return new String(cString, StandardCharsets.UTF_8);
     }
 
+    @Override
     public StreamDataTypeAndLength getTypeAndLength() {
         final int typeIndex = buffer.get() & 0xFF;
         final int length = typeIndex >> 4;
@@ -142,6 +148,7 @@ public class DataConverterByteStream implements Closeable {
         return new StreamDataTypeAndLength(type, length);
     }
 
+    @Override
     public int readCompressedInteger(final int length) {
         int result = 0;
         for (int i = 0; i < length; i++) {
@@ -151,6 +158,7 @@ public class DataConverterByteStream implements Closeable {
         return result;
     }
 
+    @Override
     public long readCompressedLong(final int length) {
         long value = 0;
         for (int i = 0; i < length; i++) {
@@ -160,6 +168,7 @@ public class DataConverterByteStream implements Closeable {
         return value;
     }
 
+    @Override
     public List<String> getStringList() {
         final int size = getInt();
         List<String> result = new ArrayList<>(size);
@@ -169,24 +178,29 @@ public class DataConverterByteStream implements Closeable {
         return result;
     }
 
+    @Override
     public double getDouble() {
         final StreamDataTypeAndLength typeAndLength = getTypeAndLength();
         return Double.longBitsToDouble(readCompressedLong(typeAndLength.length));
     }
 
+    @Override
     public byte getByte() {
         return buffer.get();
     }
 
+    @Override
     public byte[] getBytes(byte[] string) {
         buffer.get(string);
         return string;
     }
 
+    @Override
     public long fileSize() {
         return buffer.limit();
     }
 
+    @Override
     public long position() {
         return buffer.position();
     }
@@ -196,51 +210,8 @@ public class DataConverterByteStream implements Closeable {
         cache.close();
     }
 
-    enum StreamDataType {
-        INT_8(0x00),
-        INT_16(0x01),
-        INT_32(0x02),
-        INT_64(0x03),
-        FLOAT_32(0x04),
-        FLOAT_64(0x05),
-        BOOL(0x06),
-        CLASS_ID(0x07),
-        OBJECT_ID(0x08),
-        BYTE_STREAM(0x09),
-        CLASS_END(0x0A),
-        ARRAY(0x0B),
-        STRING(0x0C);
-
-        private final byte key;
-
-        StreamDataType(final int key) {
-            this.key = (byte) ((byte) key & 0xFF);
-        }
-
-        public byte getKey() {
-            return key;
-        }
-    }
-
-    public static class StreamDataTypeAndLength {
-        public final StreamDataType type;
-        public final int length;
-
-        public StreamDataTypeAndLength(final StreamDataType type, final int length) {
-            this.type = type;
-            this.length = length;
-        }
-
-        @Override
-        public String toString() {
-            return "StreamDataTypeAndLength{" +
-                    "type=" + type +
-                    ", length=" + length +
-                    '}';
-        }
-    }
-
+    @Override
     public void seek(long position) {
-        buffer.position((int)position);
+        buffer.position((int) position);
     }
 }

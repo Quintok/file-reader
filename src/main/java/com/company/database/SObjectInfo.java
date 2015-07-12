@@ -1,10 +1,12 @@
 package com.company.database;
 
+import com.company.blockfile.ByteStreamConverter;
 import com.company.blockfile.ClassInfo;
-import com.company.blockfile.DataConverterByteStream;
 import com.company.polydata.PropertySet;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class SObjectInfo extends ClassInfo {
     private final Types objectType;
@@ -14,19 +16,7 @@ public class SObjectInfo extends ClassInfo {
     private final Map<String, SObjectInfo> children;
 
 
-
-    enum Types {
-        MultiMap,
-        Field,
-        Table,
-        Column,
-        AssocTablePolyHash,
-        Join,
-        Index,
-        Folder,
-        IndexUnique;
-    }
-    public SObjectInfo(DataConverterByteStream converter) {
+    public SObjectInfo(ByteStreamConverter converter) {
         super(converter);
         objectType = Types.valueOf(converter.getString());
         blockNumber = converter.getInt();
@@ -68,5 +58,17 @@ public class SObjectInfo extends ClassInfo {
                 ", subObjectNames=" + subObjectNames +
                 ", children=" + children +
                 '}';
+    }
+
+    enum Types {
+        MultiMap,
+        Field,
+        Table,
+        Column,
+        AssocTablePolyHash,
+        Join,
+        Index,
+        Folder,
+        IndexUnique;
     }
 }

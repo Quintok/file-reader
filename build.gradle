@@ -8,10 +8,11 @@ run {
 }
 
 compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
 
 compileJava {
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 repositories {
@@ -24,9 +25,10 @@ dependencies {
     compile 'com.google.guava:guava:+'
     compile 'com.beust:jcommander:1.+'
     compile 'org.slf4j:slf4j-api:1.+'
-    runtime 'com.hazelcast:hazelcast:3.4.+'
+    runtime 'com.hazelcast:hazelcast:3.+'
     runtime 'org.slf4j:slf4j-log4j12:1.+'
     runtime 'log4j:log4j:1.2.+'
+    testCompile "junit:junit:+"
 }
 
 task wrapper(type: Wrapper) {

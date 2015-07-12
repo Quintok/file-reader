@@ -1,8 +1,8 @@
 package com.company.database;
 
 import com.company.blockfile.BlockedFileManager;
+import com.company.blockfile.ByteStreamConverter;
 import com.company.blockfile.ClassInfo;
-import com.company.blockfile.DataConverterByteStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +15,10 @@ public class Database extends ClassInfo {
     private final Map<String, SObjectInfo> subObjects;
     private BlockedFileManager blockFileManager;
 
-    public Database(DataConverterByteStream converter) {
+    public Database(ByteStreamConverter converter) {
         super(converter);
         version = converter.getInt();
-        if(version < 1 || version > 1) {
+        if (version < 1 || version > 1) {
             throw new UnsupportedOperationException("Database is not supported.");
         }
         subObjects = converter.getStringPointerMap(SObjectInfo.class);
@@ -38,11 +38,11 @@ public class Database extends ClassInfo {
                 '}';
     }
 
-    public void setBlockFileManager(BlockedFileManager blockFileManager) {
-        this.blockFileManager = blockFileManager;
-    }
-
     public BlockedFileManager getBlockFileManager() {
         return blockFileManager;
+    }
+
+    public void setBlockFileManager(BlockedFileManager blockFileManager) {
+        this.blockFileManager = blockFileManager;
     }
 }

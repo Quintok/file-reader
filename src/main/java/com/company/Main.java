@@ -1,6 +1,7 @@
 package com.company;
 
 import com.beust.jcommander.JCommander;
+
 import java.io.IOException;
 
 public class Main {

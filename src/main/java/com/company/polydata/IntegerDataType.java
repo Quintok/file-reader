@@ -1,6 +1,6 @@
 package com.company.polydata;
 
-import com.company.blockfile.DataConverterByteStream;
+import com.company.blockfile.ByteStreamConverter;
 
 import java.util.Optional;
 
@@ -10,7 +10,7 @@ public class IntegerDataType implements DataType<IntegerDataType> {
     private int value;
 
     @Override
-    public IntegerDataType read(DataConverterByteStream converter) {
+    public IntegerDataType read(ByteStreamConverter converter) {
         this.value = converter.getInt();
         return this;
     }

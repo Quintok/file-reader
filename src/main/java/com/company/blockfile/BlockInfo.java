@@ -3,7 +3,8 @@ package com.company.blockfile;
 public class BlockInfo extends ClassInfo {
     private final AllocateFlag flag;
     private final DataBlock dataBlock;
-    public BlockInfo(DataConverterByteStream converter) {
+
+    public BlockInfo(ByteStreamConverter converter) {
         super(converter);
         flag = AllocateFlag.values()[converter.getInt()];
         dataBlock = converter.get();
@@ -23,16 +24,16 @@ public class BlockInfo extends ClassInfo {
         return dataBlock.getSize();
     }
 
-    public enum AllocateFlag {
-        ALLOCATED,
-        UNUSED
-    }
-
     @Override
     public String toString() {
         return "BlockInfo{" +
                 "flag=" + flag +
                 ", dataBlock=" + dataBlock +
                 '}';
+    }
+
+    public enum AllocateFlag {
+        ALLOCATED,
+        UNUSED
     }
 }

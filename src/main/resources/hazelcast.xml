@@ -3,8 +3,8 @@
                                http://www.hazelcast.com/schema/config/hazelcast-config-3.4.xsd"
            xmlns="http://www.hazelcast.com/schema/config">
     <cache name="objectreference">
-        <key-type class-name="java.lang.Integer" />
-        <value-type class-name="com.company.blockfile.ClassInfo" />
+        <key-type class-name="java.lang.Integer"/>
+        <value-type class-name="com.company.blockfile.ClassInfo"/>
         <statistics-enabled>true</statistics-enabled>
         <management-enabled>true</management-enabled>
 

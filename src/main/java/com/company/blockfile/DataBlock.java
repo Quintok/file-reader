@@ -5,13 +5,12 @@ import org.slf4j.LoggerFactory;
 
 public class DataBlock extends ClassInfo {
     private static final Logger logger = LoggerFactory.getLogger(DataBlock.class);
-
-    long offset;
     final long size;
+    long offset;
 
-    public DataBlock(DataConverterByteStream converter) {
+    public DataBlock(ByteStreamConverter converter) {
         super(converter);
-        DataConverterByteStream.StreamDataTypeAndLength typeAndLength = converter.getTypeAndLength();
+        ByteStreamConverter.StreamDataTypeAndLength typeAndLength = converter.getTypeAndLength();
         offset = converter.readCompressedLong(typeAndLength.length);
         logger.debug("Offset: {} from {}", offset, typeAndLength);
         typeAndLength = converter.getTypeAndLength();
@@ -21,6 +20,10 @@ public class DataBlock extends ClassInfo {
 
     public long getOffset() {
         return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     public long getSize() {
@@ -33,9 +36,5 @@ public class DataBlock extends ClassInfo {
                 "offset=" + offset +
                 ", fileSize=" + size +
                 '}';
-    }
-
-    public void setOffset(int offset) {
-        this.offset = offset;
     }
 }

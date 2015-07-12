@@ -1,12 +1,12 @@
 package com.company.polydata;
 
-import com.company.blockfile.DataConverterByteStream;
+import com.company.blockfile.ByteStreamConverter;
 
-public class DoubleDataType implements DataType<DoubleDataType>{
+public class DoubleDataType implements DataType<DoubleDataType> {
     private double value;
 
     @Override
-    public DoubleDataType read(DataConverterByteStream converter) {
+    public DoubleDataType read(ByteStreamConverter converter) {
         value = converter.getDouble();
         return this;
     }

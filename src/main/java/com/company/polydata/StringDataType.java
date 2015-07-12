@@ -1,16 +1,18 @@
 package com.company.polydata;
 
-import com.company.blockfile.DataConverterByteStream;
+import com.company.blockfile.ByteStreamConverter;
 
 import java.nio.charset.StandardCharsets;
 
-public class StringDataType implements DataType<StringDataType>{
+import static com.google.common.base.Preconditions.checkState;
+
+public class StringDataType implements DataType<StringDataType> {
     // maximum number of bytes to use before switching from CHARS type to String type.
     private static final int CHARS_SIZE = 8;
     private String value;
 
     @Override
-    public StringDataType read(DataConverterByteStream converter) {
+    public StringDataType read(ByteStreamConverter converter) {
         this.value = converter.getString();
         return this;
     }
@@ -22,10 +24,11 @@ public class StringDataType implements DataType<StringDataType>{
                 '}';
     }
 
-    public StringDataType readChars(DataConverterByteStream converter) {
+    public StringDataType readChars(ByteStreamConverter converter) {
         byte[] bytes = new byte[CHARS_SIZE];
-        final DataConverterByteStream.StreamDataTypeAndLength typeAndLength = converter.getTypeAndLength();
+        final ByteStreamConverter.StreamDataTypeAndLength typeAndLength = converter.getTypeAndLength();
         final int i = converter.readCompressedInteger(typeAndLength.length);
+        checkState(i == CHARS_SIZE);
         converter.getBytes(bytes);
         this.value = new String(bytes, StandardCharsets.US_ASCII).trim();
         return this;

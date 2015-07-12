@@ -10,12 +10,12 @@ public class FreeBlockManager extends ClassInfo {
     static final Logger logger = LoggerFactory.getLogger(FreeBlockManager.class);
     private final List<DataBlock> blocks;
 
-    public FreeBlockManager(DataConverterByteStream converter) {
+    public FreeBlockManager(ByteStreamConverter converter) {
         super(converter);
         final int size = converter.getInt();
         logger.info("Free block manager of fileSize {} bits, fileSize of free blocks is {}", converter.fileSize(), size);
         blocks = new ArrayList<>(size);
-        for(int i = 0; i < size; i++) {
+        for (int i = 0; i < size; i++) {
             DataBlock db = converter.get();
             blocks.add(db);
             logger.debug("Adding block to list in position {} is {}", i, db);

@@ -1,6 +1,6 @@
 package com.company.polydata;
 
-import com.company.blockfile.DataConverterByteStream;
+import com.company.blockfile.ByteStreamConverter;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -10,7 +10,13 @@ import java.util.Optional;
  * Unfortunately BinaryDataType would require multiple inheritance in that case.
  */
 public interface DataType<T extends DataType<T>> extends Serializable {
-    T read(DataConverterByteStream converter);
-    default Optional<Boolean> asBoolean() { return Optional.empty(); }
-    default Optional<Integer> asInteger() { return Optional.empty(); }
+    T read(ByteStreamConverter converter);
+
+    default Optional<Boolean> asBoolean() {
+        return Optional.empty();
+    }
+
+    default Optional<Integer> asInteger() {
+        return Optional.empty();
+    }
 }

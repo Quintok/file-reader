@@ -2,7 +2,9 @@ package com.company.blockfile;
 
 import com.company.database.Database;
 import com.company.database.SObjectInfo;
-import com.company.polydata.*;
+import com.company.polydata.BinaryDataType;
+import com.company.polydata.PolyValue;
+import com.company.polydata.PropertySet;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -10,7 +12,7 @@ import java.util.Optional;
 public abstract class ClassInfo implements Serializable {
 
     @SuppressWarnings("unused")
-    public ClassInfo(DataConverterByteStream converter) {
+    public ClassInfo(ByteStreamConverter converter) {
 
     }
 

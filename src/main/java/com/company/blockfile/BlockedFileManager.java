@@ -12,7 +12,7 @@ public class BlockedFileManager {
     private static final Logger logger = LoggerFactory.getLogger(BlockedFileManager.class);
     private static final String ID_STRING = "STRBF";
     private static final int CURRENT_VERSION = 0x101;
-    private final DataConverterByteStream converter;
+    private final ByteStreamConverter converter;
     private final int version;
     private final WorkingMode workingMode;
     private DataBlock primaryDataBlock;
@@ -23,13 +23,13 @@ public class BlockedFileManager {
     private FreeBlockManager freeBlockManager;
 
     public BlockedFileManager(
-                              DataConverterByteStream converter,
-                              int version,
-                              WorkingMode workingMode,
-                              DataBlock primaryDataBlock,
-                              DataBlock primaryFreeDataBlock,
-                              DataBlock secondaryDataBlock,
-                              DataBlock secondaryFreeDataBlock) {
+            ByteStreamConverter converter,
+            int version,
+            WorkingMode workingMode,
+            DataBlock primaryDataBlock,
+            DataBlock primaryFreeDataBlock,
+            DataBlock secondaryDataBlock,
+            DataBlock secondaryFreeDataBlock) {
         this.converter = converter;
         this.version = version;
         this.workingMode = workingMode;
@@ -37,7 +37,7 @@ public class BlockedFileManager {
         this.primaryFreeDataBlock = primaryFreeDataBlock;
         this.secondaryDataBlock = primaryDataBlock;
         this.secondaryFreeDataBlock = primaryFreeDataBlock;
-        switch(workingMode) {
+        switch (workingMode) {
             case PRIMARY:
                 loadAllocatedBlock(primaryDataBlock);
                 loadFreeBlockManager(primaryFreeDataBlock);
@@ -48,7 +48,7 @@ public class BlockedFileManager {
         }
     }
 
-    public static Optional<BlockedFileManager> fromMappedFile(DataConverterByteStream converter) {
+    public static Optional<BlockedFileManager> fromMappedFile(ByteStreamConverter converter) {
         converter.seek(0);
         logger.info("Seeking to {} for opening string", 0);
         final String s = readString(converter);
@@ -70,7 +70,7 @@ public class BlockedFileManager {
         for (WorkingMode mode : WorkingMode.values()) {
             if (mode.ordinal() == ((int) b)) {
                 workingMode = mode;
-                continue;
+                break;
             }
 
         }
@@ -110,7 +110,7 @@ public class BlockedFileManager {
      *
      * @return ASCII string from position.
      */
-    private static String readString(DataConverterByteStream bytes) {
+    private static String readString(ByteStreamConverter bytes) {
         byte[] string = new byte[ID_STRING.length()];
         bytes.getBytes(string);
         return new String(string, StandardCharsets.US_ASCII);
